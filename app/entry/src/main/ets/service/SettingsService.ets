@@ -33,6 +33,8 @@ interface SettingsRecord {
   lyricScale: number;
   /** 翻译行字号倍率，旧版本没有这个字段 */
   transScale?: number;
+  /** 底部页签与迷你播放器的通透度 0-100，旧版本没有 */
+  chromeGlass?: number;
   showTranslation: boolean;
   rememberProgress: boolean;
   showThumbs: boolean;
@@ -59,6 +61,11 @@ export class SettingsState {
   @Trace lyricScale: number = 1.0;
   /** 翻译行字号倍率，跟正文分开调 */
   @Trace transScale: number = 1.0;
+  /**
+   * 底部页签栏与迷你播放器的通透度 0-100。
+   * 0 是完全实心（旧观感），越大底色越透、背景模糊越强。
+   */
+  @Trace chromeGlass: number = 0;
   @Trace showTranslation: boolean = true;
   @Trace rememberProgress: boolean = true;
   @Trace showThumbs: boolean = true;
@@ -101,6 +108,7 @@ export class SettingsService {
       this.state.blur = rec.blur !== false;
       this.state.lyricScale = this.clampScale(rec.lyricScale);
       this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
+      this.state.chromeGlass = this.clampPercent(rec.chromeGlass ?? 0);
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -224,6 +232,11 @@ export class SettingsService {
     await this.save();
   }
 
+  async setChromeGlass(v: number): Promise<void> {
+    this.state.chromeGlass = this.clampPercent(v);
+    await this.save();
+  }
+
   async setShowTranslation(on: boolean): Promise<void> {
     this.state.showTranslation = on;
     await this.save();
@@ -286,6 +299,7 @@ export class SettingsService {
       blur: this.state.blur,
       lyricScale: this.state.lyricScale,
       transScale: this.state.transScale,
+      chromeGlass: this.state.chromeGlass,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,
@@ -312,6 +326,7 @@ export class SettingsService {
       this.state.blur = rec.blur !== false;
       this.state.lyricScale = this.clampScale(rec.lyricScale);
       this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
+      this.state.chromeGlass = this.clampPercent(rec.chromeGlass ?? 0);
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -380,6 +395,16 @@ export class SettingsService {
     return v > 2.0 ? 2.0 : v;
   }
 
+  private clampPercent(v: number): number {
+    if (typeof v !== 'number' || Number.isNaN(v)) {
+      return 0;
+    }
+    if (v < 0) {
+      return 0;
+    }
+    return v > 100 ? 100 : v;
+  }
+
   /** 界面缩放只开放三档，非法值一律回标准 */
   private clampUi(v: number | undefined): number {
     if (v === undefined || typeof v !== 'number' || Number.isNaN(v)) {
@@ -401,6 +426,7 @@ export class SettingsService {
       blur: this.state.blur,
       lyricScale: this.state.lyricScale,
       transScale: this.state.transScale,
+      chromeGlass: this.state.chromeGlass,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,

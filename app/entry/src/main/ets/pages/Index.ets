@@ -1278,6 +1278,8 @@ struct Index {
           settings.setBlur(on);
         })
         this.settingsDivider()
+        this.chromeGlassSlider()
+        this.settingsDivider()
         this.settingsToggleRow('列表缩略图', '从音频里解出封面，关闭可省内存', this.st.showThumbs, (on: boolean) => {
           settings.setShowThumbs(on);
         })
@@ -1903,6 +1905,16 @@ struct Index {
     return `正文${Math.round(this.st.lyricScale * 100)}% · 译文${Math.round(this.st.transScale * 100)}%`;
   }
 
+  /**
+   * 页签栏与迷你播放器的底色：通透度越高，alpha 越低。
+   * 基色固定 #38322E，只改 alpha 通道；模糊强度在调用处按同一比例给。
+   */
+  private chromeBg(): string {
+    const alpha = Math.round(255 * (1 - this.st.chromeGlass / 100 * 0.7));
+    const h = alpha.toString(16).toUpperCase();
+    return `#${h.length < 2 ? '0' + h : h}38322E`;
+  }
+
   private librarySummary(): string {
     const sort = this.st.sortMode === 0 ? '按标题' : (this.st.sortMode === 1 ? '按艺术家' : '按时长');
     return `${sort} · 已下载 ${this.dl.doneSongs.length} 首`;
@@ -1934,6 +1946,44 @@ struct Index {
         settings.setDefaultSpeed(v);
         audioPlayer.setSpeed(v);
       })
+  }
+
+  /** 底部页签与迷你播放器的通透度：越大底色越透、背景模糊越强 */
+  @Builder
+  chromeGlassSlider() {
+    Column({ space: 8 }) {
+      Row() {
+        Text('页签与播放器通透度')
+          .fontSize(14)
+          .fontColor(TEXT_MAIN)
+          .layoutWeight(1)
+        Text(this.st.chromeGlass <= 0 ? '实心' : `${Math.round(this.st.chromeGlass)}%`)
+          .fontSize(11)
+          .fontColor(TEXT_SUB)
+      }
+      .width('100%')
+
+      Slider({
+        value: this.st.chromeGlass,
+        min: 0,
+        max: 100,
+        step: 5
+      })
+        .blockColor(settings.accent())
+        .trackColor('#33FFFFFF')
+        .selectedColor(settings.accent())
+        .trackThickness(3)
+        .blockSize({ width: 14, height: 14 })
+        .width('100%')
+        .onChange((v: number, mode: SliderChangeMode) => {
+          settings.state.chromeGlass = v;
+          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
+            settings.setChromeGlass(v);
+          }
+        })
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 10, left: 14, right: 14 })
   }
 
   /** 歌词正文字号：拖动即时预览，松手落盘 */
@@ -5428,8 +5478,8 @@ struct Index {
     .height(62)
     .padding({ left: 9, right: 9 })
     .borderRadius(20)
-    .backgroundColor('#FF38322E')
-    .backdropBlur(0)
+    .backgroundColor(this.chromeBg())
+    .backdropBlur(this.st.chromeGlass / 100 * 30)
     .borderWidth(1)
     .borderColor('#1FFFFFFF')
     .onClick(() => {
@@ -5450,8 +5500,8 @@ struct Index {
     .height(64)
     .padding({ left: 6, right: 6 })
     .borderRadius(26)
-    .backgroundColor('#FF38322E')
-    .backdropBlur(0)
+    .backgroundColor(this.chromeBg())
+    .backdropBlur(this.st.chromeGlass / 100 * 30)
     .borderWidth(1)
     .borderColor('#26FFFFFF')
     .shadow({ radius: 20, color: '#66000000', offsetX: 0, offsetY: 8 })
