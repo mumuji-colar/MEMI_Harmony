@@ -6281,7 +6281,10 @@ struct Index {
           .width('100%')
           .alignItems(VerticalAlign.Center)
 
-          Blank()
+          // 顶部留白少于中缝，整块内容略微上偏
+          Column()
+            .width('100%')
+            .layoutWeight(2)
 
           // 封面与歌曲信息同宽，左边缘才对得齐
           Column() {
@@ -6339,7 +6342,9 @@ struct Index {
           }
           .width(this.wideCover)
 
-          Blank()
+          Column()
+            .width('100%')
+            .layoutWeight(3)
 
           Row({ space: 8 }) {
             Text(formatTime(this.renderPos))
@@ -6377,7 +6382,7 @@ struct Index {
             .fontColor('#A5978F')
             .width('100%')
             .textAlign(TextAlign.Center)
-            .margin({ top: 3 })
+            .margin({ top: 12 })
 
           Row() {
             this.shuffleButton()
@@ -6431,19 +6436,21 @@ struct Index {
           .width('100%')
           .justifyContent(FlexAlign.SpaceBetween)
           .alignItems(VerticalAlign.Center)
-          .margin({ top: 6 })
+          .margin({ top: 20 })
 
           Column() {
             this.playerActionRow()
           }
           .width('100%')
-          .margin({ top: 4 })
+          .margin({ top: 22 })
         }
         .width(this.wideColW)
-        .height('100%')
+        .layoutWeight(1)
       }
       .layoutWeight(11)
       .height('100%')
+      .alignItems(HorizontalAlign.Start)
+      .padding({ left: 14 })
 
       // ── 右屏：只有歌词，水平垂直都居中 ──
       Column() {
