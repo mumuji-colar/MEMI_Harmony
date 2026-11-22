@@ -6479,6 +6479,9 @@ struct Index {
       }
       .layoutWeight(9)
       .height('100%')
+      // 上下各留一点，歌词边界才和左屏顶栏、功能行对齐
+      .padding({ top: 10, bottom: 10 })
+      .clip(true)
     }
     .width('100%')
     .height('100%')
