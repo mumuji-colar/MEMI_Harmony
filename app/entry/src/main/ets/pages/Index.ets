@@ -1356,19 +1356,12 @@ struct Index {
   @Builder
   settingsLyricsPage() {
     Column({ space: 2 }) {
-      this.settingsSectionIntro('歌词排版', '字号与翻译行')
+      this.settingsSectionIntro('歌词排版', '正文字号、翻译字号与译文开关')
       Column() {
-        Row({ space: 8 }) {
-          Text('歌词字号')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-            .layoutWeight(1)
-          this.sizeChip('小', 0.88)
-          this.sizeChip('标准', 1.0)
-          this.sizeChip('大', 1.15)
-        }
-        .width('100%')
-        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+        this.lyricBodySlider()
+
+        this.settingsDivider()
+        this.lyricTransSlider()
 
         this.settingsDivider()
         this.settingsToggleRow('显示译文', '歌词里带翻译时显示第二行', this.st.showTranslation,
@@ -1873,8 +1866,7 @@ struct Index {
   }
 
   private lyricsSummary(): string {
-    const size = this.st.lyricScale < 0.95 ? '小' : (this.st.lyricScale > 1.05 ? '大' : '标准');
-    return `${size}字号 · 译文${this.st.showTranslation ? '开' : '关'}`;
+    return `正文${Math.round(this.st.lyricScale * 100)}% · 译文${Math.round(this.st.transScale * 100)}%`;
   }
 
   private librarySummary(): string {
@@ -1910,19 +1902,80 @@ struct Index {
       })
   }
 
+  /** 歌词正文字号：拖动即时预览，松手落盘 */
   @Builder
-  sizeChip(label: string, scale: number) {
-    Text(label)
-      .fontSize(11)
-      .fontColor(Math.abs(this.st.lyricScale - scale) < 0.02 ? '#241C18' : TEXT_SUB)
-      .height(28)
-      .padding({ left: 12, right: 12 })
-      .borderRadius(14)
-      .backgroundColor(Math.abs(this.st.lyricScale - scale) < 0.02 ? settings.accent() : '#14FFFFFF')
-      .textAlign(TextAlign.Center)
-      .onClick(() => {
-        settings.setLyricScale(scale);
+  lyricBodySlider() {
+    Column({ space: 8 }) {
+      Row() {
+        Text('歌词正文字号')
+          .fontSize(14)
+          .fontColor(TEXT_MAIN)
+          .layoutWeight(1)
+        Text(`${Math.round(this.st.lyricScale * 100)}%`)
+          .fontSize(11)
+          .fontColor(TEXT_SUB)
+      }
+      .width('100%')
+
+      Slider({
+        value: this.st.lyricScale,
+        min: 0.7,
+        max: 2.0,
+        step: 0.05
       })
+        .blockColor(settings.accent())
+        .trackColor('#33FFFFFF')
+        .selectedColor(settings.accent())
+        .trackThickness(3)
+        .blockSize({ width: 14, height: 14 })
+        .width('100%')
+        .onChange((v: number, mode: SliderChangeMode) => {
+          settings.state.lyricScale = v;
+          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
+            settings.setLyricScale(v);
+          }
+        })
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 10, left: 14, right: 14 })
+  }
+
+  /** 翻译行字号：与正文分开调，正文调大时译文不必跟着变粗 */
+  @Builder
+  lyricTransSlider() {
+    Column({ space: 8 }) {
+      Row() {
+        Text('翻译字号')
+          .fontSize(14)
+          .fontColor(TEXT_MAIN)
+          .layoutWeight(1)
+        Text(`${Math.round(this.st.transScale * 100)}%`)
+          .fontSize(11)
+          .fontColor(TEXT_SUB)
+      }
+      .width('100%')
+
+      Slider({
+        value: this.st.transScale,
+        min: 0.7,
+        max: 2.0,
+        step: 0.05
+      })
+        .blockColor(settings.accent())
+        .trackColor('#33FFFFFF')
+        .selectedColor(settings.accent())
+        .trackThickness(3)
+        .blockSize({ width: 14, height: 14 })
+        .width('100%')
+        .onChange((v: number, mode: SliderChangeMode) => {
+          settings.state.transScale = v;
+          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
+            settings.setTransScale(v);
+          }
+        })
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 10, left: 14, right: 14 })
   }
 
   @Builder
@@ -5567,7 +5620,7 @@ struct Index {
 
                     if (this.st.showTranslation && line.translation.length > 0) {
                       Text(line.translation)
-                        .fontSize(settings.scale(11))
+                        .fontSize(settings.trans(11))
                         .fontColor('#E8DCD6')
                         .textAlign(TextAlign.Center)
                         .maxLines(2)
@@ -6172,205 +6225,209 @@ struct Index {
    */
   @Builder
   widePlayer() {
-    Row({ space: 24 }) {
-      // ── 左屏：除歌词外的所有控件 ──
+    Row() {
+      // ── 左屏：除歌词外的所有控件，整块水平居中 ──
       Column() {
-        Row() {
-          this.topIcon($r('app.media.ic_nav_back'), '#F2E8E3', () => {
-            this.closePlayer();
-          })
-          Blank()
-          Stack() {
-            this.heartIcon()
-          }
-          .width(40)
-          .height(40)
-          .onClick(() => {
-            const song = playback.currentSong();
-            if (song !== null) {
-              this.toggleFavorite(song);
+        Column() {
+          Row() {
+            this.topIcon($r('app.media.ic_nav_back'), '#F2E8E3', () => {
+              this.closePlayer();
+            })
+            Blank()
+            Stack() {
+              this.heartIcon()
             }
-          })
-          if (this.currentIsRemote()) {
-            this.topIcon($r('app.media.ic_nav_comment'), '#F2E8E3', () => {
+            .width(40)
+            .height(40)
+            .onClick(() => {
               const song = playback.currentSong();
               if (song !== null) {
-                neteaseComment.open(song);
+                this.toggleFavorite(song);
+              }
+            })
+            if (this.currentIsRemote()) {
+              this.topIcon($r('app.media.ic_nav_comment'), '#F2E8E3', () => {
+                const song = playback.currentSong();
+                if (song !== null) {
+                  neteaseComment.open(song);
+                }
+              })
+            }
+            this.moreButton('#F2E8E3', () => {
+              const song = playback.currentSong();
+              if (song !== null) {
+                this.showSongMenu(song);
               }
             })
           }
-          this.moreButton('#F2E8E3', () => {
-            const song = playback.currentSong();
-            if (song !== null) {
-              this.showSongMenu(song);
+          .width('100%')
+          .alignItems(VerticalAlign.Center)
+
+          Blank()
+
+          // 封面与歌曲信息同宽，左边缘才对得齐
+          Column() {
+            Stack() {
+              if (this.covers.cover !== null) {
+                Image(this.covers.cover as image.PixelMap)
+                  .width('100%')
+                  .height('100%')
+                  .objectFit(ImageFit.Cover)
+                  .draggable(false)
+              } else if (this.remoteCoverUrl().length > 0) {
+                Image(this.remoteCoverUrl())
+                  .width('100%')
+                  .height('100%')
+                  .objectFit(ImageFit.Cover)
+                  .draggable(false)
+              } else {
+                Column() {
+                  Image($r('app.media.ic_note'))
+                    .width(48)
+                    .height(48)
+                    .fillColor('#8C7C74')
+                    .draggable(false)
+                }
+                .width('100%')
+                .height('100%')
+                .justifyContent(FlexAlign.Center)
+              }
             }
-          })
-        }
-        .width('100%')
-        .alignItems(VerticalAlign.Center)
+            .width('100%')
+            .aspectRatio(1)
+            .borderRadius(16)
+            .clip(true)
+            .backgroundColor('#1FFFFFFF')
+            .shadow({ radius: 30, color: '#73000000', offsetX: 0, offsetY: 14 })
 
-        Blank()
+            Column({ space: 4 }) {
+              Text(this.player.title.length > 0 ? this.player.title : '未在播放')
+                .fontSize(21)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#FFFFFF')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .width('100%')
+              Text(this.currentArtist())
+                .fontSize(12)
+                .fontColor('#D8CAC3')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .width('100%')
+            }
+            .alignItems(HorizontalAlign.Start)
+            .width('100%')
+            .margin({ top: 12 })
+          }
+          .width(320)
 
-        // 封面与歌曲信息共用同一宽度，保证左边缘对齐
-        Column() {
-          Stack() {
-            if (this.covers.cover !== null) {
-              Image(this.covers.cover as image.PixelMap)
-                .width('100%')
-                .height('100%')
-                .objectFit(ImageFit.Cover)
-                .draggable(false)
-            } else if (this.remoteCoverUrl().length > 0) {
-              Image(this.remoteCoverUrl())
-                .width('100%')
-                .height('100%')
-                .objectFit(ImageFit.Cover)
-                .draggable(false)
-            } else {
-              Column() {
-                Image($r('app.media.ic_note'))
-                  .width(48)
-                  .height(48)
-                  .fillColor('#8C7C74')
+          Blank()
+
+          Row({ space: 8 }) {
+            Text(formatTime(this.renderPos))
+              .fontSize(9)
+              .fontColor('#C9BBB4')
+              .width(34)
+            Slider({
+              value: this.player.durationMs > 0 ? this.renderPos : 0,
+              max: this.player.durationMs > 0 ? this.player.durationMs : 1,
+              step: 1
+            })
+              .blockColor('#F5E9E2')
+              .trackColor('#3DFFFFFF')
+              .selectedColor('#F5E9E2')
+              .trackThickness(2)
+              .blockSize({ width: 9, height: 9 })
+              .layoutWeight(1)
+              .enabled(this.player.durationMs > 0)
+              .onChange((value: number, mode: SliderChangeMode) => {
+                if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
+                  audioPlayer.seek(value);
+                }
+              })
+            Text(formatTime(this.player.durationMs))
+              .fontSize(9)
+              .fontColor('#C9BBB4')
+              .width(34)
+              .textAlign(TextAlign.End)
+          }
+          .width('100%')
+          .alignItems(VerticalAlign.Center)
+
+          Text(this.qualityText())
+            .fontSize(9)
+            .fontColor('#A5978F')
+            .width('100%')
+            .textAlign(TextAlign.Center)
+            .margin({ top: 3 })
+
+          Row() {
+            this.shuffleButton()
+
+            Stack() {
+              this.glyph($r('app.media.ic_ctrl_prev'), '#F5EBE6', 24)
+            }
+            .width(40)
+            .height(40)
+            .onClick(() => {
+              playback.previous();
+            })
+
+            Stack() {
+              Circle()
+                .width(54)
+                .height(54)
+                .fill('#F3E6DE')
+              if (this.player.isPlaying) {
+                Image($r('app.media.ic_pause'))
+                  .width(20)
+                  .height(20)
+                  .fillColor('#241C18')
+                  .draggable(false)
+              } else {
+                Image($r('app.media.ic_play'))
+                  .width(20)
+                  .height(20)
+                  .fillColor('#241C18')
                   .draggable(false)
               }
-              .width('100%')
-              .height('100%')
-              .justifyContent(FlexAlign.Center)
             }
-          }
-          .width('100%')
-          .aspectRatio(1)
-          .borderRadius(16)
-          .clip(true)
-          .backgroundColor('#1FFFFFFF')
-          .shadow({ radius: 30, color: '#73000000', offsetX: 0, offsetY: 14 })
-
-          Column({ space: 4 }) {
-            Text(this.player.title.length > 0 ? this.player.title : '未在播放')
-              .fontSize(21)
-              .fontWeight(FontWeight.Medium)
-              .fontColor('#FFFFFF')
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .width('100%')
-            Text(this.currentArtist())
-              .fontSize(12)
-              .fontColor('#D8CAC3')
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
-          .margin({ top: 12 })
-        }
-        .width(300)
-
-        Blank()
-
-        Row({ space: 8 }) {
-          Text(formatTime(this.renderPos))
-            .fontSize(9)
-            .fontColor('#C9BBB4')
-            .width(34)
-          Slider({
-            value: this.player.durationMs > 0 ? this.renderPos : 0,
-            max: this.player.durationMs > 0 ? this.player.durationMs : 1,
-            step: 1
-          })
-            .blockColor('#F5E9E2')
-            .trackColor('#3DFFFFFF')
-            .selectedColor('#F5E9E2')
-            .trackThickness(2)
-            .blockSize({ width: 9, height: 9 })
-            .layoutWeight(1)
-            .enabled(this.player.durationMs > 0)
-            .onChange((value: number, mode: SliderChangeMode) => {
-              if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
-                audioPlayer.seek(value);
-              }
+            .width(54)
+            .height(54)
+            .opacity(this.player.isLoading ? 0.6 : 1)
+            .onClick(() => {
+              audioPlayer.toggle();
             })
-          Text(formatTime(this.player.durationMs))
-            .fontSize(9)
-            .fontColor('#C9BBB4')
-            .width(34)
-            .textAlign(TextAlign.End)
-        }
-        .width('100%')
-        .alignItems(VerticalAlign.Center)
 
-        Text(this.qualityText())
-          .fontSize(9)
-          .fontColor('#A5978F')
-          .width('100%')
-          .textAlign(TextAlign.Center)
-          .margin({ top: 3 })
-
-        Row() {
-          this.shuffleButton()
-
-          Stack() {
-            this.glyph($r('app.media.ic_ctrl_prev'), '#F5EBE6', 24)
-          }
-          .width(40)
-          .height(40)
-          .onClick(() => {
-            playback.previous();
-          })
-
-          Stack() {
-            Circle()
-              .width(54)
-              .height(54)
-              .fill('#F3E6DE')
-            if (this.player.isPlaying) {
-              Image($r('app.media.ic_pause'))
-                .width(20)
-                .height(20)
-                .fillColor('#241C18')
-                .draggable(false)
-            } else {
-              Image($r('app.media.ic_play'))
-                .width(20)
-                .height(20)
-                .fillColor('#241C18')
-                .draggable(false)
+            Stack() {
+              this.glyph($r('app.media.ic_ctrl_next'), '#F5EBE6', 24)
             }
+            .width(40)
+            .height(40)
+            .onClick(() => {
+              playback.next();
+            })
+
+            this.repeatButton()
           }
-          .width(54)
-          .height(54)
-          .opacity(this.player.isLoading ? 0.6 : 1)
-          .onClick(() => {
-            audioPlayer.toggle();
-          })
+          .width('100%')
+          .justifyContent(FlexAlign.SpaceBetween)
+          .alignItems(VerticalAlign.Center)
+          .margin({ top: 6 })
 
-          Stack() {
-            this.glyph($r('app.media.ic_ctrl_next'), '#F5EBE6', 24)
+          Column() {
+            this.playerActionRow()
           }
-          .width(40)
-          .height(40)
-          .onClick(() => {
-            playback.next();
-          })
-
-          this.repeatButton()
+          .width('100%')
+          .margin({ top: 4 })
         }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .alignItems(VerticalAlign.Center)
-        .margin({ top: 6 })
-
-        Column() {
-          this.playerActionRow()
-        }
-        .width('100%')
-        .margin({ top: 4 })
+        .width(360)
+        .height('100%')
       }
-      .width(340)
+      .layoutWeight(1)
       .height('100%')
 
-      // ── 右屏：只有歌词 ──
+      // ── 右屏：只有歌词，水平垂直都居中 ──
       Column() {
         this.wideLyricPanel()
       }
@@ -6408,23 +6465,25 @@ struct Index {
             ListItem() {
               Column({ space: 3 }) {
                 Text(line.text)
-                  .fontSize(settings.scale(15))
+                  .fontSize(settings.scale(18))
                   .fontWeight(index === this.lyrics.currentIndex ? FontWeight.Medium : FontWeight.Normal)
                   .fontColor(index === this.lyrics.currentIndex ? '#FFFFFF' : '#8E8079')
+                  .textAlign(TextAlign.Center)
                   .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .width('100%')
                 if (this.st.showTranslation && line.translation.length > 0) {
                   Text(line.translation)
-                    .fontSize(settings.scale(11))
+                    .fontSize(settings.trans(11))
                     .fontColor('#B3A49C')
-                    .maxLines(1)
+                    .textAlign(TextAlign.Center)
+                    .maxLines(2)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .width('100%')
                 }
               }
               .width('100%')
-              .alignItems(HorizontalAlign.Start)
+              .alignItems(HorizontalAlign.Center)
               .padding({ top: 7, bottom: 7 })
               .onClick(() => {
                 audioPlayer.seek(line.timeMs);
@@ -6441,8 +6500,8 @@ struct Index {
       } else if (this.lyrics.plainText.length > 0) {
         Scroll() {
           Text(this.lyrics.plainText)
-            .fontSize(settings.scale(13))
-            .lineHeight(settings.scale(24))
+            .fontSize(settings.scale(15))
+            .lineHeight(settings.scale(26))
             .fontColor('#C9BBB4')
             .width('100%')
         }
@@ -6462,7 +6521,7 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .alignItems(HorizontalAlign.Start)
+    .alignItems(HorizontalAlign.Center)
   }
 
   @Builder

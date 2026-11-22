@@ -31,6 +31,8 @@ interface SettingsRecord {
   accentIndex: number;
   blur: boolean;
   lyricScale: number;
+  /** 翻译行字号倍率，旧版本没有这个字段 */
+  transScale?: number;
   showTranslation: boolean;
   rememberProgress: boolean;
   showThumbs: boolean;
@@ -53,8 +55,10 @@ export class SettingsState {
   @Trace accentIndex: number = 0;
   /** 毛玻璃 / 背景光斑。低端机卡就关掉 */
   @Trace blur: boolean = true;
-  /** 歌词字号倍率：0.9 / 1.0 / 1.15 */
+  /** 歌词正文字号倍率，0.7 - 2.0，设置页用滑块调 */
   @Trace lyricScale: number = 1.0;
+  /** 翻译行字号倍率，跟正文分开调 */
+  @Trace transScale: number = 1.0;
   @Trace showTranslation: boolean = true;
   @Trace rememberProgress: boolean = true;
   @Trace showThumbs: boolean = true;
@@ -96,6 +100,7 @@ export class SettingsService {
       this.state.accentIndex = this.clampIndex(rec.accentIndex);
       this.state.blur = rec.blur !== false;
       this.state.lyricScale = this.clampScale(rec.lyricScale);
+      this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -161,6 +166,11 @@ export class SettingsService {
     return Math.round(size * this.state.lyricScale * this.state.uiScale);
   }
 
+  /** 翻译行专用：倍率独立于正文，界面缩放同样要乘 */
+  trans(size: number): number {
+    return Math.round(size * this.state.transScale * this.state.uiScale);
+  }
+
   /**
    * 界面缩放后的尺寸，列表行高、封面块、标题字号都走这里。
    * 只影响可读性相关的量，不改左右外边距，避免缩放后整页跟着挪。
@@ -206,6 +216,11 @@ export class SettingsService {
 
   async setLyricScale(scale: number): Promise<void> {
     this.state.lyricScale = this.clampScale(scale);
+    await this.save();
+  }
+
+  async setTransScale(scale: number): Promise<void> {
+    this.state.transScale = this.clampScale(scale);
     await this.save();
   }
 
@@ -270,6 +285,7 @@ export class SettingsService {
       accentIndex: this.state.accentIndex,
       blur: this.state.blur,
       lyricScale: this.state.lyricScale,
+      transScale: this.state.transScale,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,
@@ -295,6 +311,7 @@ export class SettingsService {
       this.state.accentIndex = this.clampIndex(rec.accentIndex);
       this.state.blur = rec.blur !== false;
       this.state.lyricScale = this.clampScale(rec.lyricScale);
+      this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -357,10 +374,10 @@ export class SettingsService {
     if (typeof v !== 'number' || Number.isNaN(v)) {
       return 1.0;
     }
-    if (v < 0.85) {
-      return 0.85;
+    if (v < 0.7) {
+      return 0.7;
     }
-    return v > 1.2 ? 1.2 : v;
+    return v > 2.0 ? 2.0 : v;
   }
 
   /** 界面缩放只开放三档，非法值一律回标准 */
@@ -383,6 +400,7 @@ export class SettingsService {
       accentIndex: this.state.accentIndex,
       blur: this.state.blur,
       lyricScale: this.state.lyricScale,
+      transScale: this.state.transScale,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,
