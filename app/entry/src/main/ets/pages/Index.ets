@@ -379,6 +379,11 @@ struct Index {
     const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
     this.wideCover = Math.max(160, Math.min(this.wideColW, availH));
 
+    // 宽屏歌词已经常驻右屏了，从窄屏切过来时把全屏歌词浮层收掉
+    if (this.isWide) {
+      this.showLyrics = false;
+    }
+
     Logger.i(`窗口 ${vw.toFixed(0)}x${vh.toFixed(0)}vp 比例=${ratio.toFixed(2)} `
       + `类型=${deviceInfo.deviceType} 侧栏=${this.isWide} 内容宽=${this.contentWidth.toFixed(0)} `
       + `列=${this.gridCols} 播放页列=${this.wideColW.toFixed(0)} 封面=${this.wideCover.toFixed(0)}`);
@@ -6185,7 +6190,10 @@ struct Index {
         this.downloadCurrent();
       })
 
-      this.lyricActionButton()
+      // 宽屏歌词常驻右屏，不再需要单独的全屏歌词入口
+      if (!this.isWide) {
+        this.lyricActionButton()
+      }
 
       this.actionButton($r('app.media.ic_act_listadd'), '加歌单', () => {
         this.openPlaylistPicker();
