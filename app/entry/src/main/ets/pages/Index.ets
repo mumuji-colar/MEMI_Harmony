@@ -387,7 +387,7 @@ struct Index {
 
     // 竖屏播放页同理。固定开销：顶栏 44 + 歌名 67 + 封面下间距 10
     // + 进度 36 + 音质 16 + 控制 64 + 功能行 46
-    const narrowFixedH = 290;
+    const narrowFixedH = 302;
     const narrowAvailH = vh - this.topInset - this.bottomInset - 10 - narrowFixedH;
     this.narrowCover = Math.max(150, Math.min(vw - 40, narrowAvailH));
 
@@ -5836,7 +5836,8 @@ struct Index {
         left: 20,
         right: 20,
         top: this.topInset + 4,
-        bottom: this.bottomInset + 6
+        // 底部多留一点，别让控件压在手势条上
+        bottom: this.bottomInset + 18
       })
     }
     .width('100%')
@@ -6485,7 +6486,8 @@ struct Index {
       left: 24,
       right: 24,
       top: this.topInset + 4,
-      bottom: this.bottomInset + 6
+      // 底部多留一点，别让功能行压在手势条上
+      bottom: this.bottomInset + 18
     })
   }
   /** 宽屏播放浮层：背景 + 左右分栏，与竖排版本共存 */
@@ -6798,7 +6800,8 @@ struct Index {
         left: 20,
         right: 20,
         top: this.topInset + 4,
-        bottom: this.bottomInset + 6
+        // 底部多留一点，别让控件压在手势条上
+        bottom: this.bottomInset + 18
       })
     }
     .width('100%')
