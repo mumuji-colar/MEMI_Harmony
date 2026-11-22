@@ -380,8 +380,9 @@ struct Index {
     const usable = vw - 48;
     const leftW = usable * 0.55;
     this.wideColW = Math.min(340, Math.max(240, leftW - 64));
-    // 顶栏 44 + 歌名 56 + 进度 34 + 音质 16 + 控制 54 + 功能行 50 + 间距 30
-    const fixedH = 284;
+    // 顶栏 44 + 顶部留白 4 + 歌名 49 + 中缝 18 + 进度 36
+    // + 音质 23 + 控制 74 + 功能行 68
+    const fixedH = 328;
     const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
     this.wideCover = Math.max(160, Math.min(this.wideColW, availH));
 
@@ -6302,10 +6303,10 @@ struct Index {
           .width('100%')
           .alignItems(VerticalAlign.Center)
 
-          // 顶部留白少于中缝，整块内容略微上偏
+          // 顶部只留一点，整块内容上抬
           Column()
             .width('100%')
-            .layoutWeight(2)
+            .height(4)
 
           // 封面与歌曲信息同宽，左边缘才对得齐
           Column() {
@@ -6363,9 +6364,10 @@ struct Index {
           }
           .width(this.wideCover)
 
+          // 封面与进度条之间保持固定舒适间距，多余空间全部让到最底部
           Column()
             .width('100%')
-            .layoutWeight(3)
+            .height(18)
 
           Row({ space: 8 }) {
             Text(formatTime(this.renderPos))
@@ -6464,6 +6466,10 @@ struct Index {
           }
           .width('100%')
           .margin({ top: 22 })
+
+          Column()
+            .width('100%')
+            .layoutWeight(1)
         }
         .width(this.wideColW)
         .layoutWeight(1)
