@@ -4,6 +4,7 @@
     "products": [
       {
         "name": "default",
+        "signingConfig": "signconfig",
         "compatibleSdkVersion": "5.0.0(12)",
         "targetSdkVersion": "26.0.1",
         "runtimeOS": "HarmonyOS",

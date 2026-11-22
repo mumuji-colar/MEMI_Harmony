@@ -19,6 +19,7 @@ Thumbs.db
 # ── 本地签名与配置（绝不入库） ──────────
 local.properties
 *.local.json5
+.sign/
 signing/
 *.p12
 *.cer

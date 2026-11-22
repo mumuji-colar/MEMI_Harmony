@@ -7,7 +7,7 @@
 #   ./build.sh run          构建 + 安装到已连接设备 + 启动 + 抓 3 秒日志
 #   ./build.sh log          实时跟 MEMI 日志
 #
-# 模拟器不需要签名；真机需要先在 IDE 里做自动签名。
+# 模拟器可直接跑（不校验签名）；配置签名后产物自动变为 signed。
 
 set -e
 
@@ -35,10 +35,18 @@ hdc() {
 
 cd "$PROJECT"
 
+# 优先取已签名产物，没有则退回 unsigned
+latest_hap() {
+  local hap
+  hap=$(find "$PROJECT/entry/build" -name "*-signed.hap" 2>/dev/null | head -1)
+  [ -n "$hap" ] || hap=$(find "$PROJECT/entry/build" -name "*.hap" 2>/dev/null | head -1)
+  printf '%s\n' "$hap"
+}
+
 build() {
   echo "==> hvigor assembleHap"
   "$HVIGOR" --no-daemon "$@"
-  HAP=$(find "$PROJECT/entry/build" -name "*.hap" | head -1)
+  HAP=$(latest_hap)
   echo
   echo "==> 产物: $HAP"
   ls -lh "$HAP" | awk '{print "    "$5"  "$9}'
@@ -65,7 +73,7 @@ case "${1:-debug}" in
   run)
     build assembleHap
     require_device
-    HAP="$PROJECT/entry/build/default/outputs/default/entry-default-unsigned.hap"
+    HAP=$(latest_hap)
     # hdc 只认 Windows 形式的本地路径
     hdc install -r "$(cygpath -w "$HAP")" | tail -1
     hdc shell "hilog -r" >/dev/null 2>&1
