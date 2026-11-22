@@ -380,17 +380,15 @@ struct Index {
     const usable = vw - 48;
     const leftW = usable * 0.55;
     this.wideColW = Math.min(340, Math.max(240, leftW - 64));
-    // 顶栏 44 + 顶部留白 4 + 歌名 49 + 中缝 18 + 进度 36
-    // + 音质 23 + 控制 74 + 功能行 68
-    const fixedH = 328;
-    const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
-    this.wideCover = Math.max(160, Math.min(this.wideColW, availH));
+    // 封面按窗口高度的比例走，而不是减一堆固定像素：
+    // 阔折叠 665 高和大折叠 773 高都能自然缩放。
+    // 取 0.40 而不是更大：矮屏（665）要留出一点弹性留白，
+    // 高屏（773）的封面会被列宽 299 卡住，不会无限变大。
+    this.wideCover = Math.min(this.wideColW, vh * 0.40);
 
-    // 竖屏播放页同理。固定开销：顶栏 44 + 歌名 67 + 封面下间距 10
-    // + 进度 36 + 音质 16 + 控制 64 + 功能行 46
-    const narrowFixedH = 302;
-    const narrowAvailH = vh - this.topInset - this.bottomInset - 10 - narrowFixedH;
-    this.narrowCover = Math.max(150, Math.min(vw - 40, narrowAvailH));
+    // 竖屏播放页同样用高度比例：普通手机取宽度上限，
+    // 阔折叠外屏这种矮宽窗口则由高度决定，避免把功能行顶出屏幕。
+    this.narrowCover = Math.max(150, Math.min(vw - 40, vh * 0.44));
 
     // 宽屏歌词已经常驻右屏了，从窄屏切过来时把全屏歌词浮层收掉
     if (this.isWide) {
@@ -6303,10 +6301,10 @@ struct Index {
           .width('100%')
           .alignItems(VerticalAlign.Center)
 
-          // 顶部只留一点，整块内容上抬
+          // 顶部留白少于中缝，整块内容略微上偏
           Column()
             .width('100%')
-            .height(4)
+            .layoutWeight(2)
 
           // 封面与歌曲信息同宽，左边缘才对得齐
           Column() {
@@ -6364,10 +6362,9 @@ struct Index {
           }
           .width(this.wideCover)
 
-          // 封面与进度条之间保持固定舒适间距，多余空间全部让到最底部
           Column()
             .width('100%')
-            .height(18)
+            .layoutWeight(3)
 
           Row({ space: 8 }) {
             Text(formatTime(this.renderPos))
@@ -6466,10 +6463,6 @@ struct Index {
           }
           .width('100%')
           .margin({ top: 22 })
-
-          Column()
-            .width('100%')
-            .layoutWeight(1)
         }
         .width(this.wideColW)
         .layoutWeight(1)
