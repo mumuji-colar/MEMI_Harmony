@@ -140,6 +140,13 @@ struct Index {
   @Local gridCols: number = 3;
   /** 宽屏左侧导航栏宽度 */
   private railWidth: number = 88;
+  /**
+   * 宽屏播放页专用尺寸：左屏内容列宽与封面边长。
+   * 不跟着全局断点算，因为分栏后每屏只有半幅宽度，
+   * 大折叠展开（707vp）和阔折叠（940vp）差得很多。
+   */
+  @Local wideColW: number = 340;
+  @Local wideCover: number = 300;
   private win: window.Window | null = null;
   /** 窗口尺寸回调；注销时必须用同一个引用 */
   private onWinResize: ((size: window.Size) => void) | null = null;
@@ -362,8 +369,17 @@ struct Index {
     this.gridCols = this.contentWidth >= 900 ? 5
       : this.contentWidth >= 640 ? 4 : 3;
 
+    // 宽屏播放页单独算：分栏后每屏只有半幅，内容列两侧各留 48 才不显得塞满
+    const paneW = (vw - 48) / 2;
+    this.wideColW = Math.min(340, Math.max(220, paneW - 96));
+    // 顶栏 44 + 歌名 56 + 进度 34 + 音质 16 + 控制 54 + 功能行 50 + 间距 30
+    const fixedH = 284;
+    const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
+    this.wideCover = Math.max(160, Math.min(this.wideColW, availH));
+
     Logger.i(`窗口 ${vw.toFixed(0)}x${vh.toFixed(0)}vp 比例=${ratio.toFixed(2)} `
-      + `类型=${deviceInfo.deviceType} 侧栏=${this.isWide} 内容宽=${this.contentWidth.toFixed(0)} 列=${this.gridCols}`);
+      + `类型=${deviceInfo.deviceType} 侧栏=${this.isWide} 内容宽=${this.contentWidth.toFixed(0)} `
+      + `列=${this.gridCols} 播放页列=${this.wideColW.toFixed(0)} 封面=${this.wideCover.toFixed(0)}`);
   }
 
   build() {
@@ -6319,7 +6335,7 @@ struct Index {
             .width('100%')
             .margin({ top: 12 })
           }
-          .width(320)
+          .width(this.wideCover)
 
           Blank()
 
@@ -6421,7 +6437,7 @@ struct Index {
           .width('100%')
           .margin({ top: 4 })
         }
-        .width(360)
+        .width(this.wideColW)
         .height('100%')
       }
       .layoutWeight(1)
