@@ -147,6 +147,12 @@ struct Index {
    */
   @Local wideColW: number = 340;
   @Local wideCover: number = 300;
+  /**
+   * 竖屏播放页封面边长。
+   * 阔折叠外屏这类「矮宽」窗口（460×672）比例接近平板，
+   * 封面若按容器撑满就会把进度条和控制键顶出屏幕，所以也要限高。
+   */
+  @Local narrowCover: number = 340;
   private win: window.Window | null = null;
   /** 窗口尺寸回调；注销时必须用同一个引用 */
   private onWinResize: ((size: window.Size) => void) | null = null;
@@ -378,6 +384,12 @@ struct Index {
     const fixedH = 284;
     const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
     this.wideCover = Math.max(160, Math.min(this.wideColW, availH));
+
+    // 竖屏播放页同理。固定开销：顶栏 44 + 歌名 67 + 封面下间距 10
+    // + 进度 36 + 音质 16 + 控制 64 + 功能行 46
+    const narrowFixedH = 290;
+    const narrowAvailH = vh - this.topInset - this.bottomInset - 10 - narrowFixedH;
+    this.narrowCover = Math.max(150, Math.min(vw - 40, narrowAvailH));
 
     // 宽屏歌词已经常驻右屏了，从窄屏切过来时把全屏歌词浮层收掉
     if (this.isWide) {
@@ -6630,6 +6642,8 @@ struct Index {
         }
         .width('100%')
         .aspectRatio(1)
+        // 矮宽窗口下按可用高度收窄，避免把下方控件顶出去
+        .constraintSize({ maxWidth: this.narrowCover })
         .borderRadius(14)
         .clip(true)
         .backgroundColor('#1FFFFFFF')
