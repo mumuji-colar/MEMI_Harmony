@@ -38,8 +38,8 @@ MEMI 輕音的鸿蒙原生版本，使用 **ArkTS / ArkUI** 重写，独立于 A
 
 | 项 | 版本 |
 |:---|:---|
-| DevEco Studio | 5.0.0 及以上 |
-| HarmonyOS SDK | API 12（5.0.0） |
+| DevEco Studio | 5.0.0 及以上（开发使用 26.0.1） |
+| HarmonyOS SDK | 最低兼容 API 12，当前用 API 26 编译 |
 | 语言 | ArkTS / ArkUI（Stage 模型） |
 
 模拟器可直接运行；真机需要在 DevEco Studio 里配置自动签名。
@@ -73,8 +73,6 @@ app/
     common/                  工具函数与日志
   entry/src/main/resources/  字符串、颜色、图标
 testdata/                    各格式测试音频（验证解码与歌词读取）
-HANDOVER.md                  开发记录与踩坑清单
-PARITY.md                    与 Android 版的功能对照
 ```
 
 ## 免责声明
