@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "MEMI 輕音主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "MEMI 輕音"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "MEMI 輕音"
+    },
+    {
+      "name": "reason_background",
+      "value": "用于在锁屏或切到后台时继续播放音乐"
+    },
+    {
+      "name": "reason_file_persist",
+      "value": "用于长期读取你导入的音乐文件"
+    }
+  ]
+}

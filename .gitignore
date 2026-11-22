@@ -1,0 +1,39 @@
+# ── 构建产物 ─────────────────────────────
+app/entry/build/
+app/build/
+app/.hvigor/
+.hvigor/
+build/
+/preview/
+*.hap
+*.hsp
+*.app
+
+# ── DevEco / IDE ────────────────────────
+app/.idea/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ── 本地签名与配置（绝不入库） ──────────
+local.properties
+*.local.json5
+signing/
+*.p12
+*.cer
+*.p7b
+*.jks
+*.keystore
+*.pem
+
+# ── 运行日志与根目录临时截图 ────────────
+*.log
+/*.jpeg
+/*.jpg
+/*.png
+/*.json
+
+# ── 内部开发文档（不随仓库公开） ──────
+HANDOVER.md
+PARITY.md
