@@ -1,7 +1,7 @@
 import { picker } from '@kit.CoreFileKit';
 import { common } from '@kit.AbilityKit';
 import { window, display, curves } from '@kit.ArkUI';
-import { BusinessError } from '@kit.BasicServicesKit';
+import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { audioPlayer, PlayerState } from '../service/AudioPlayer';
 import { playback, PlayMode, PlayModeState } from '../service/PlaybackController';
 import { library, LibraryState, GroupItem } from '../service/LibraryService';
@@ -130,10 +130,23 @@ struct Index {
   /** 状态栏 / 导航条的真实高度（vp），沉浸式布局下要自己让开 */
   @Local topInset: number = 36;
   @Local bottomInset: number = 16;
-  /** 页面内容区宽度（已扣掉左右各 20 的内边距），三列网格按它算格子宽 */
+  /** 页面内容区宽度（已扣掉左右内边距与宽屏导航栏），歌单网格按它算格子宽 */
   @Local contentWidth: number = 340;
+  /** 窗口宽度（vp）：折叠屏展开、平板分屏、横竖屏切换都会重算 */
+  @Local windowW: number = 360;
+  /** 宽屏形态：≥600vp 时底部页签换成左侧导航栏 */
+  @Local isWide: boolean = false;
+  /** 歌单网格列数：跟着内容宽度走，避免宽屏下格子被拉得过大 */
+  @Local gridCols: number = 3;
+  /** 宽屏左侧导航栏宽度 */
+  private railWidth: number = 88;
+  private win: window.Window | null = null;
+  /** 窗口尺寸回调；注销时必须用同一个引用 */
+  private onWinResize: ((size: window.Size) => void) | null = null;
 
   private scroller: Scroller = new Scroller();
+  /** 宽屏播放页右侧歌词用独立控制器，避免和全屏歌词页抢同一个 List */
+  private wideScroller: Scroller = new Scroller();
   private lyricTimer: number = -1;
   private scrolledIndex: number = -1;
   private lyricPath: string = '';
@@ -150,14 +163,8 @@ struct Index {
 
   async aboutToAppear(): Promise<void> {
     const ctx = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    // 安全区读取顺带完成断点初始化与窗口尺寸监听
     await this.readSafeArea(ctx);
-    try {
-      const disp = display.getDefaultDisplaySync();
-      // 减去页面左右各 20 的内边距
-      this.contentWidth = px2vp(disp.width) - 40;
-    } catch (e) {
-      Logger.w('读取屏幕宽度失败，网格用默认宽度');
-    }
     // 设置最先读：主题色要在首帧就正确，不能等界面画完再变色
     await settings.init(ctx);
     // 再把数据库开起来，后面的曲库/歌单读取都依赖它
@@ -271,6 +278,14 @@ struct Index {
 
   aboutToDisappear(): void {
     this.stopLyricTicker();
+    if (this.win !== null && this.onWinResize !== null) {
+      try {
+        this.win.off('windowSizeChange', this.onWinResize);
+      } catch (e) {
+        Logger.w('注销窗口尺寸监听失败');
+      }
+      this.onWinResize = null;
+    }
   }
 
   /**
@@ -281,6 +296,7 @@ struct Index {
   private async readSafeArea(ctx: common.UIAbilityContext): Promise<void> {
     try {
       const win = await window.getLastWindow(ctx);
+      this.win = win;
       const sys = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
       this.topInset = px2vp(sys.topRect.height);
 
@@ -299,46 +315,100 @@ struct Index {
       // 兜底：至少留一点，免得播放条压在手势条上
       this.bottomInset = bottom > 6 ? bottom : 10;
       Logger.i(`安全区 top=${this.topInset.toFixed(0)}vp bottom=${this.bottomInset.toFixed(0)}vp`);
+
+      // 断点与内容宽度：折叠屏展开 / 平板分屏 / 旋转都会重新触发
+      const rect = win.getWindowProperties().windowRect;
+      this.applyWindowWidth(rect.width, rect.height);
+      this.onWinResize = (size: window.Size) => {
+        this.applyWindowWidth(size.width, size.height);
+      };
+      win.on('windowSizeChange', this.onWinResize);
     } catch (e) {
       const err = e as BusinessError;
       Logger.w(`读安全区失败 ${err.code}，用默认值`);
+      // 拿不到窗口就退回整屏宽度，至少让断点和网格列数不至于停在默认值
+      try {
+        const disp = display.getDefaultDisplaySync();
+        this.applyWindowWidth(disp.width, disp.height);
+      } catch (e2) {
+        Logger.w('屏幕宽度也读不到，保持默认布局');
+      }
     }
+  }
+
+  /**
+   * 按窗口尺寸重算断点、内容宽度与网格列数。
+   *
+   * 判断维度是「窗口形态」而不是设备类型：折叠屏展开、横屏手机、平板
+   * 本质都是宽而矮的窗口，用宽高比一把尺子就能统一。
+   * 竖屏手机比例约 0.46，折叠屏展开约 0.9，平板横屏 1.4 以上，
+   * 所以 0.8 是「竖长手机」与「宽屏」的分界。
+   *
+   * 不能用 display.isFoldable()：模拟器在直板机上也会把它报成 true。
+   */
+  private applyWindowWidth(pxWidth: number, pxHeight: number): void {
+    const vw = px2vp(pxWidth);
+    const vh = px2vp(pxHeight);
+    this.windowW = vw;
+
+    const ratio = vh > 0 ? vw / vh : 0.5;
+    // 宽而矮的窗口才把页签挪到左侧，竖屏手机保持底部页签
+    this.isWide = vw >= 600 && ratio >= 0.8;
+
+    // 左右各 20 内边距；用侧边栏时再让出导航栏宽度
+    this.contentWidth = vw - 40 - (this.isWide ? this.railWidth : 0);
+
+    // 列数只看内容区实际宽度：窄了铺 3 列，宽了 4 列，特别宽 5 列
+    this.gridCols = this.contentWidth >= 900 ? 5
+      : this.contentWidth >= 640 ? 4 : 3;
+
+    Logger.i(`窗口 ${vw.toFixed(0)}x${vh.toFixed(0)}vp 比例=${ratio.toFixed(2)} `
+      + `类型=${deviceInfo.deviceType} 侧栏=${this.isWide} 内容宽=${this.contentWidth.toFixed(0)} 列=${this.gridCols}`);
   }
 
   build() {
     Stack() {
       this.backdrop()
 
-      Column() {
-      this.header()
-      this.statusLine()
-
-      Column() {
-        if (this.online.detailOpen) {
-          this.onlineDetail()
-        } else if (this.tab === 0) {
-          this.homeTab()
-        } else if (this.tab === 1) {
-          this.exploreTab()
-        } else if (this.tab === 2) {
-          this.libraryTab()
-        } else {
-          this.settingsTab()
+      Row() {
+        // 宽屏把底部页签挪到左侧，纵向空间全部留给内容
+        if (this.isWide) {
+          this.railBar()
         }
+
+        Column() {
+          this.header()
+          this.statusLine()
+
+          Column() {
+            if (this.online.detailOpen) {
+              this.onlineDetail()
+            } else if (this.tab === 0) {
+              this.homeTab()
+            } else if (this.tab === 1) {
+              this.exploreTab()
+            } else if (this.tab === 2) {
+              this.libraryTab()
+            } else {
+              this.settingsTab()
+            }
+          }
+          .width('100%')
+          .layoutWeight(1)
+          .opacity(this.tabFade)
+          .translate({ x: this.tabShiftX })
+        }
+        .layoutWeight(1)
+        .height('100%')
+        .padding({
+          left: 20,
+          right: 20,
+          top: this.topInset + 12,
+          bottom: 0
+        })
       }
       .width('100%')
-      .layoutWeight(1)
-      .opacity(this.tabFade)
-      .translate({ x: this.tabShiftX })
-    }
-    .width('100%')
-    .height('100%')
-    .padding({
-      left: 20,
-      right: 20,
-      top: this.topInset + 12,
-      bottom: 0
-    })
+      .height('100%')
 
       // 底部悬浮层：迷你播放器 + 页签栏。整层不拦截空白处的点击
       Column() {
@@ -347,17 +417,29 @@ struct Index {
           if (this.player.currentPath.length > 0) {
             this.miniPlayer()
           }
-          this.tabBar()
+          // 宽屏用左侧导航栏，底部只留迷你播放器
+          if (!this.isWide) {
+            this.tabBar()
+          }
         }
         .width('100%')
-        .padding({ left: 14, right: 14, bottom: this.bottomInset + 8 })
+        .padding({
+          left: this.isWide ? this.railWidth + 14 : 14,
+          right: 14,
+          bottom: this.bottomInset + 8
+        })
       }
       .width('100%')
       .height('100%')
       .hitTestBehavior(HitTestMode.Transparent)
 
       if (this.showPlayer) {
-        this.playerOverlay()
+        // 宽屏走左右分栏，歌词常驻右侧
+        if (this.isWide) {
+          this.widePlayerOverlay()
+        } else {
+          this.playerOverlay()
+        }
       }
 
       if (this.showLyrics) {
@@ -2793,7 +2875,7 @@ struct Index {
         .textOverflow({ overflow: TextOverflow.Ellipsis })
         .width('100%')
     }
-    .width((this.contentWidth - 20) / 3)
+    .width((this.contentWidth - (this.gridCols - 1) * 10) / this.gridCols)
     .clickEffect({ level: ClickEffectLevel.LIGHT, scale: 0.96 })
     .onClick(() => {
       netease.openPlaylist(p);
@@ -5306,31 +5388,77 @@ struct Index {
     .borderRadius(22)
     .backgroundColor(this.tab === index ? '#22FFFFFF' : '#00000000')
     .onClick(() => {
-      if (this.tab === index) {
-        // 再点一次当前页签：媒体库回到「歌曲」，设置回到首页
-        if (index === 2 && this.viewMode !== 0) {
-          this.viewMode = 0;
-          this.groupKey = '';
-          this.playlistId = '';
-        } else if (index === 3 && this.settingsPage.length > 0) {
-          this.settingsPage = '';
-        }
-        return;
-      }
-      this.switchTab(index);
-      if (index === 0) {
-        netease.loadHome();
-      }
-      if (index === 1) {
-        netease.ensureExplore();
-      }
-      if (index === 3) {
+      this.jumpTab(index);
+    })
+  }
+
+  /** 宽屏左侧导航栏：底部页签的竖排版，把纵向空间让给内容 */
+  @Builder
+  railBar() {
+    Column({ space: 6 }) {
+      this.railItem('首页', 0, $r('app.media.ic_tab_home'))
+      this.railItem('探索', 1, $r('app.media.ic_tab_search'))
+      this.railItem('媒体库', 2, $r('app.media.ic_tab_library'))
+      this.railItem('设置', 3, $r('app.media.ic_tab_settings'))
+    }
+    .width(this.railWidth)
+    .height('100%')
+    .padding({
+      left: 10,
+      right: 10,
+      top: this.topInset + 16,
+      bottom: this.bottomInset + 16
+    })
+  }
+
+  @Builder
+  railItem(label: string, index: number, icon: Resource) {
+    Column({ space: 5 }) {
+      Image(icon)
+        .width(24)
+        .height(24)
+        .fillColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+        .draggable(false)
+      Text(label)
+        .fontSize(10)
+        .fontColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+    }
+    .width('100%')
+    .height(60)
+    .justifyContent(FlexAlign.Center)
+    .borderRadius(18)
+    .backgroundColor(this.tab === index ? '#22FFFFFF' : '#00000000')
+    .onClick(() => {
+      this.jumpTab(index);
+    })
+  }
+
+  /** 页签点击：当前页签再点回顶层，否则切换并补一次懒加载 */
+  private jumpTab(index: number): void {
+    if (this.tab === index) {
+      // 媒体库回到「歌曲」，设置回到首页
+      if (index === 2 && this.viewMode !== 0) {
+        this.viewMode = 0;
+        this.groupKey = '';
+        this.playlistId = '';
+      } else if (index === 3 && this.settingsPage.length > 0) {
         this.settingsPage = '';
       }
-      if (index === 2) {
-        this.onModeChanged(this.viewMode);
-      }
-    })
+      return;
+    }
+    this.switchTab(index);
+    if (index === 0) {
+      netease.loadHome();
+    }
+    if (index === 1) {
+      netease.ensureExplore();
+    }
+    if (index === 3) {
+      this.settingsPage = '';
+    }
+    if (index === 2) {
+      this.onModeChanged(this.viewMode);
+    }
   }
 
   /** 歌词页：顶部小封面 + 大字歌词 + 底部迷你控制 */
@@ -6038,6 +6166,305 @@ struct Index {
   }
 
   /** 播放页：大封面 + 标题 + 进度 + 五个控制键 */
+  /**
+   * 宽屏播放页：左列封面与控制，右列歌词常驻。
+   * 折叠屏展开、平板横屏时替代竖排布局，省掉「播放页 / 歌词页」来回切。
+   */
+  @Builder
+  widePlayer() {
+    Row({ space: 24 }) {
+      // ── 左屏：除歌词外的所有控件 ──
+      Column() {
+        Row() {
+          this.topIcon($r('app.media.ic_nav_back'), '#F2E8E3', () => {
+            this.closePlayer();
+          })
+          Blank()
+          Stack() {
+            this.heartIcon()
+          }
+          .width(40)
+          .height(40)
+          .onClick(() => {
+            const song = playback.currentSong();
+            if (song !== null) {
+              this.toggleFavorite(song);
+            }
+          })
+          if (this.currentIsRemote()) {
+            this.topIcon($r('app.media.ic_nav_comment'), '#F2E8E3', () => {
+              const song = playback.currentSong();
+              if (song !== null) {
+                neteaseComment.open(song);
+              }
+            })
+          }
+          this.moreButton('#F2E8E3', () => {
+            const song = playback.currentSong();
+            if (song !== null) {
+              this.showSongMenu(song);
+            }
+          })
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+
+        Blank()
+
+        // 封面与歌曲信息共用同一宽度，保证左边缘对齐
+        Column() {
+          Stack() {
+            if (this.covers.cover !== null) {
+              Image(this.covers.cover as image.PixelMap)
+                .width('100%')
+                .height('100%')
+                .objectFit(ImageFit.Cover)
+                .draggable(false)
+            } else if (this.remoteCoverUrl().length > 0) {
+              Image(this.remoteCoverUrl())
+                .width('100%')
+                .height('100%')
+                .objectFit(ImageFit.Cover)
+                .draggable(false)
+            } else {
+              Column() {
+                Image($r('app.media.ic_note'))
+                  .width(48)
+                  .height(48)
+                  .fillColor('#8C7C74')
+                  .draggable(false)
+              }
+              .width('100%')
+              .height('100%')
+              .justifyContent(FlexAlign.Center)
+            }
+          }
+          .width('100%')
+          .aspectRatio(1)
+          .borderRadius(16)
+          .clip(true)
+          .backgroundColor('#1FFFFFFF')
+          .shadow({ radius: 30, color: '#73000000', offsetX: 0, offsetY: 14 })
+
+          Column({ space: 4 }) {
+            Text(this.player.title.length > 0 ? this.player.title : '未在播放')
+              .fontSize(21)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#FFFFFF')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+            Text(this.currentArtist())
+              .fontSize(12)
+              .fontColor('#D8CAC3')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+          .margin({ top: 12 })
+        }
+        .width(300)
+
+        Blank()
+
+        Row({ space: 8 }) {
+          Text(formatTime(this.renderPos))
+            .fontSize(9)
+            .fontColor('#C9BBB4')
+            .width(34)
+          Slider({
+            value: this.player.durationMs > 0 ? this.renderPos : 0,
+            max: this.player.durationMs > 0 ? this.player.durationMs : 1,
+            step: 1
+          })
+            .blockColor('#F5E9E2')
+            .trackColor('#3DFFFFFF')
+            .selectedColor('#F5E9E2')
+            .trackThickness(2)
+            .blockSize({ width: 9, height: 9 })
+            .layoutWeight(1)
+            .enabled(this.player.durationMs > 0)
+            .onChange((value: number, mode: SliderChangeMode) => {
+              if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
+                audioPlayer.seek(value);
+              }
+            })
+          Text(formatTime(this.player.durationMs))
+            .fontSize(9)
+            .fontColor('#C9BBB4')
+            .width(34)
+            .textAlign(TextAlign.End)
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+
+        Text(this.qualityText())
+          .fontSize(9)
+          .fontColor('#A5978F')
+          .width('100%')
+          .textAlign(TextAlign.Center)
+          .margin({ top: 3 })
+
+        Row() {
+          this.shuffleButton()
+
+          Stack() {
+            this.glyph($r('app.media.ic_ctrl_prev'), '#F5EBE6', 24)
+          }
+          .width(40)
+          .height(40)
+          .onClick(() => {
+            playback.previous();
+          })
+
+          Stack() {
+            Circle()
+              .width(54)
+              .height(54)
+              .fill('#F3E6DE')
+            if (this.player.isPlaying) {
+              Image($r('app.media.ic_pause'))
+                .width(20)
+                .height(20)
+                .fillColor('#241C18')
+                .draggable(false)
+            } else {
+              Image($r('app.media.ic_play'))
+                .width(20)
+                .height(20)
+                .fillColor('#241C18')
+                .draggable(false)
+            }
+          }
+          .width(54)
+          .height(54)
+          .opacity(this.player.isLoading ? 0.6 : 1)
+          .onClick(() => {
+            audioPlayer.toggle();
+          })
+
+          Stack() {
+            this.glyph($r('app.media.ic_ctrl_next'), '#F5EBE6', 24)
+          }
+          .width(40)
+          .height(40)
+          .onClick(() => {
+            playback.next();
+          })
+
+          this.repeatButton()
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceBetween)
+        .alignItems(VerticalAlign.Center)
+        .margin({ top: 6 })
+
+        Column() {
+          this.playerActionRow()
+        }
+        .width('100%')
+        .margin({ top: 4 })
+      }
+      .width(340)
+      .height('100%')
+
+      // ── 右屏：只有歌词 ──
+      Column() {
+        this.wideLyricPanel()
+      }
+      .layoutWeight(1)
+      .height('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .padding({
+      left: 24,
+      right: 24,
+      top: this.topInset + 4,
+      bottom: this.bottomInset + 6
+    })
+  }
+  /** 宽屏播放浮层：背景 + 左右分栏，与竖排版本共存 */
+  @Builder
+  widePlayerOverlay() {
+    Stack() {
+      this.playerBackdropLayer()
+      this.widePlayer()
+    }
+    .width('100%')
+    .height('100%')
+    .transition(this.sheetTransition(300, 250))
+  }
+
+  /** 宽屏播放页右栏歌词：当前行高亮，点击跳转；独立滚动控制器 */
+  @Builder
+  wideLyricPanel() {
+    Column() {
+      if (this.lyrics.hasLyric) {
+        List({ scroller: this.wideScroller }) {
+          ForEach(this.lyrics.lines, (line: LyricLine, index: number) => {
+            ListItem() {
+              Column({ space: 3 }) {
+                Text(line.text)
+                  .fontSize(settings.scale(15))
+                  .fontWeight(index === this.lyrics.currentIndex ? FontWeight.Medium : FontWeight.Normal)
+                  .fontColor(index === this.lyrics.currentIndex ? '#FFFFFF' : '#8E8079')
+                  .maxLines(2)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+                if (this.st.showTranslation && line.translation.length > 0) {
+                  Text(line.translation)
+                    .fontSize(settings.scale(11))
+                    .fontColor('#B3A49C')
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .width('100%')
+                }
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Start)
+              .padding({ top: 7, bottom: 7 })
+              .onClick(() => {
+                audioPlayer.seek(line.timeMs);
+              })
+            }
+          }, (line: LyricLine) => `wl_${line.timeMs}_${line.text}`)
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .contentStartOffset(240)
+        .contentEndOffset(240)
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.None)
+      } else if (this.lyrics.plainText.length > 0) {
+        Scroll() {
+          Text(this.lyrics.plainText)
+            .fontSize(settings.scale(13))
+            .lineHeight(settings.scale(24))
+            .fontColor('#C9BBB4')
+            .width('100%')
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
+      } else {
+        Column() {
+          Text('暂无歌词')
+            .fontSize(13)
+            .fontColor('#8E8079')
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
   @Builder
   playerOverlay() {
     Stack() {
@@ -6258,6 +6685,9 @@ struct Index {
       }
       .width('100%')
       .height('100%')
+      // 宽屏下整列限宽居中：封面、歌名、进度条左边缘才会对齐，
+      // 否则封面被单独限宽、文字仍铺满，会错位成两套网格
+      .constraintSize({ maxWidth: 440 })
       .padding({
         left: 20,
         right: 20,
@@ -6588,6 +7018,14 @@ struct Index {
       this.scrolledIndex = idx;
       if (this.showLyrics) {
         this.scroller.scrollToIndex(idx, true, ScrollAlign.CENTER);
+      }
+      // 宽屏播放页右栏歌词同步跟随；首帧布局未完成时忽略
+      if (this.showPlayer && this.isWide) {
+        try {
+          this.wideScroller.scrollToIndex(idx, true, ScrollAlign.CENTER);
+        } catch (e) {
+          Logger.w('宽屏歌词滚动尚未就绪');
+        }
       }
     }
   }
@@ -6974,7 +7412,8 @@ struct Index {
     let row: NeteasePlaylist[] = [];
     for (let i = 0; i < lists.length; i++) {
       row.push(lists[i]);
-      if (row.length === 3) {
+      // 列数跟着断点走，宽屏一行铺更多
+      if (row.length === this.gridCols) {
         out.push(row);
         row = [];
       }

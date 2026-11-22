@@ -11,6 +11,7 @@ build/
 
 # ── DevEco / IDE ────────────────────────
 app/.idea/
+app/.appanalyzer/
 .idea/
 *.iml
 .DS_Store
