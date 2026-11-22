@@ -369,9 +369,11 @@ struct Index {
     this.gridCols = this.contentWidth >= 900 ? 5
       : this.contentWidth >= 640 ? 4 : 3;
 
-    // 宽屏播放页单独算：分栏后每屏只有半幅，内容列两侧各留 48 才不显得塞满
-    const paneW = (vw - 48) / 2;
-    this.wideColW = Math.min(340, Math.max(220, paneW - 96));
+    // 宽屏播放页单独算。左屏控件多（5 个播放键 + 5 个功能键），
+    // 所以两栏按 55:45 分而不是对半，窄窗口下才不会挤成一团。
+    const usable = vw - 48;
+    const leftW = usable * 0.55;
+    this.wideColW = Math.min(340, Math.max(240, leftW - 64));
     // 顶栏 44 + 歌名 56 + 进度 34 + 音质 16 + 控制 54 + 功能行 50 + 间距 30
     const fixedH = 284;
     const availH = vh - this.topInset - this.bottomInset - 10 - fixedH;
@@ -6440,14 +6442,14 @@ struct Index {
         .width(this.wideColW)
         .height('100%')
       }
-      .layoutWeight(1)
+      .layoutWeight(11)
       .height('100%')
 
       // ── 右屏：只有歌词，水平垂直都居中 ──
       Column() {
         this.wideLyricPanel()
       }
-      .layoutWeight(1)
+      .layoutWeight(9)
       .height('100%')
     }
     .width('100%')
