@@ -13,7 +13,7 @@ set -e
 
 # DevEco Studio 安装位置，可用环境变量覆盖：
 #   DEVECO_HOME="/path/to/DevEco Studio" ./build.sh
-DEVECO_WIN="${DEVECO_HOME:-D:/Huawei/DevEco Studio}"
+DEVECO_WIN="${DEVECO_HOME:-D:/Huawei/DevEcoStudio}"
 DEVECO="$(cygpath -u "$DEVECO_WIN" 2>/dev/null || printf '%s' "$DEVECO_WIN")"
 PROJECT="$(cd "$(dirname "$0")" && pwd)/app"
 BUNDLE="${MEMI_BUNDLE:-com.mmc.merimusicplayer}"
