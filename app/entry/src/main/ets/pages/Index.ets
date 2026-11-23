@@ -3855,6 +3855,9 @@ struct Index {
     .borderRadius(12)
     .onClick(() => {
       neteaseArtist.close();
+      // 详情页在内容区，播放页不关就会把它盖住，点完还停在播放页
+      this.showPlayer = false;
+      this.showLyrics = false;
       netease.openAlbum(p);
     })
   }
@@ -5587,6 +5590,9 @@ struct Index {
       }
       return;
     }
+    // 详情页在内容区里优先于页签显示，切页签前必须收掉，
+    // 否则歌单 / 专辑会一直压在新页签上面
+    netease.closeDetail();
     this.switchTab(index);
     if (index === 0) {
       netease.loadHome();
@@ -6409,6 +6415,12 @@ struct Index {
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
                 .width('100%')
+                .onClick(() => {
+                  const song = playback.currentSong();
+                  if (song !== null && song.artistId > 0) {
+                    this.openArtist(song.artistId, song.artist);
+                  }
+                })
             }
             .alignItems(HorizontalAlign.Start)
             .width('100%')
