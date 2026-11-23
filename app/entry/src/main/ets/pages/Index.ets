@@ -3056,12 +3056,22 @@ struct Index {
             if (block.state === HomeBlockState.READY) {
               this.homeSectionHeader(block.glyph, block.title)
               if (block.kind === HomeBlockKind.SONGS) {
-                Column() {
-                  ForEach(block.songs, (song: Song, index: number) => {
-                    this.homeSongRow(song, index, block.songs)
-                  }, (song: Song) => `hb_${block.key}_${song.path}`)
+                // 一页三行，左右滑动翻页（Swiper 自带吸附，每次正好翻三条）
+                Swiper() {
+                  ForEach(this.songPages(block.songs), (page: Song[], pi: number) => {
+                    Column() {
+                      ForEach(page, (song: Song, si: number) => {
+                        this.homeSongRow(song, pi * 3 + si, block.songs)
+                      }, (song: Song) => `hb_${block.key}_${song.path}`)
+                    }
+                    .width('100%')
+                  }, (page: Song[], pi: number) => `pg_${block.key}_${pi}`)
                 }
                 .width('100%')
+                .height(168)
+                .indicator(false)
+                .loop(false)
+                .cachedCount(1)
               } else if (block.kind === HomeBlockKind.RADAR) {
                 Scroll() {
                   Row({ space: 12 }) {
@@ -3159,6 +3169,15 @@ struct Index {
     .onClick(() => {
       playback.playSong(song, queue);
     })
+  }
+
+  /** 把一段歌曲按每页 3 首切开，供首页横向翻页 */
+  songPages(songs: Song[]): Song[][] {
+    const pages: Song[][] = [];
+    for (let i = 0; i < songs.length; i += 3) {
+      pages.push(songs.slice(i, i + 3));
+    }
+    return pages;
   }
 
   /** 三列歌单网格，行高按内容宽度算，避免 Grid 在 Scroll 里拿不到高度 */

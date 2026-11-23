@@ -454,32 +454,38 @@ export class NeteaseService {
     }
   }
 
+  /**
+   * 首页每段拉多少首。
+   * 界面一屏只露 3 张卡片，剩下的靠横向滑动看，所以这里要多取一些；
+   * 歌单类接口本来就是拉整份再截取，多取几首不增加请求数。
+   */
   private async songsOf(key: string): Promise<Song[]> {
+    const take = 20;
     if (key === 'radar') {
-      return await fetchRadarSongs(3);
+      return await fetchRadarSongs(take);
     }
     if (key === 'daily') {
       const all = await fetchDailyRecommendSongs();
-      return all.slice(0, 3);
+      return all.slice(0, take);
     }
     if (key === 'fm') {
       const all = await fetchPersonalFmSongs();
-      return all.slice(0, 3);
+      return all.slice(0, take);
     }
     if (key === 'soar') {
       const all = await fetchPlaylistDetail(TOPLIST_SOARING);
-      return all.slice(0, 3);
+      return all.slice(0, take);
     }
     if (key === 'new') {
-      return await fetchNewSongs(3);
+      return await fetchNewSongs(take);
     }
     if (key === 'hot') {
       const all = await fetchPlaylistDetail(TOPLIST_HOT);
-      return all.slice(0, 3);
+      return all.slice(0, take);
     }
     if (key === 'newrank') {
       const all = await fetchPlaylistDetail(TOPLIST_NEW);
-      return all.slice(0, 3);
+      return all.slice(0, take);
     }
     return [];
   }
