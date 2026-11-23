@@ -35,6 +35,8 @@ interface SettingsRecord {
   transScale?: number;
   /** 底部页签与迷你播放器的通透度 0-100，旧版本没有 */
   chromeGlass?: number;
+  /** 是否已同意隐私政策，旧版本没有 */
+  privacyAgreed?: boolean;
   showTranslation: boolean;
   rememberProgress: boolean;
   showThumbs: boolean;
@@ -66,6 +68,11 @@ export class SettingsState {
    * 0 是完全实心（旧观感），越大底色越透、背景模糊越强。
    */
   @Trace chromeGlass: number = 0;
+  /**
+   * 是否已同意隐私政策。
+   * 未同意前不发起任何网络请求，也不读取外部存储里的音频文件。
+   */
+  @Trace privacyAgreed: boolean = false;
   @Trace showTranslation: boolean = true;
   @Trace rememberProgress: boolean = true;
   @Trace showThumbs: boolean = true;
@@ -109,6 +116,7 @@ export class SettingsService {
       this.state.lyricScale = this.clampScale(rec.lyricScale);
       this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
       this.state.chromeGlass = this.clampPercent(rec.chromeGlass ?? 0);
+      this.state.privacyAgreed = rec.privacyAgreed === true;
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -237,6 +245,11 @@ export class SettingsService {
     await this.save();
   }
 
+  async setPrivacyAgreed(v: boolean): Promise<void> {
+    this.state.privacyAgreed = v;
+    await this.save();
+  }
+
   async setShowTranslation(on: boolean): Promise<void> {
     this.state.showTranslation = on;
     await this.save();
@@ -300,6 +313,7 @@ export class SettingsService {
       lyricScale: this.state.lyricScale,
       transScale: this.state.transScale,
       chromeGlass: this.state.chromeGlass,
+      privacyAgreed: this.state.privacyAgreed,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,
@@ -327,6 +341,7 @@ export class SettingsService {
       this.state.lyricScale = this.clampScale(rec.lyricScale);
       this.state.transScale = this.clampScale(rec.transScale ?? 1.0);
       this.state.chromeGlass = this.clampPercent(rec.chromeGlass ?? 0);
+      this.state.privacyAgreed = rec.privacyAgreed === true;
       this.state.showTranslation = rec.showTranslation !== false;
       this.state.rememberProgress = rec.rememberProgress !== false;
       this.state.showThumbs = rec.showThumbs !== false;
@@ -427,6 +442,7 @@ export class SettingsService {
       lyricScale: this.state.lyricScale,
       transScale: this.state.transScale,
       chromeGlass: this.state.chromeGlass,
+      privacyAgreed: this.state.privacyAgreed,
       showTranslation: this.state.showTranslation,
       rememberProgress: this.state.rememberProgress,
       showThumbs: this.state.showThumbs,

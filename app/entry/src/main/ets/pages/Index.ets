@@ -22,6 +22,7 @@ import { downloader, DownloadState, formatBytes } from '../service/DownloadServi
 import { storage, StorageState } from '../service/StorageService';
 import { backup } from '../service/BackupService';
 import { DownloadTask, DownloadStatus } from '../model/DownloadTask';
+import { PRIVACY_INTRO, PRIVACY_SECTIONS, PRIVACY_UPDATED, PrivacySection } from '../common/PrivacyPolicy';
 import { neteaseAuth, NeteaseAuthState, QrPhase } from '../service/NeteaseAuth';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { webview } from '@kit.ArkWeb';
@@ -153,6 +154,9 @@ struct Index {
    * 封面若按容器撑满就会把进度条和控制键顶出屏幕，所以也要限高。
    */
   @Local narrowCover: number = 340;
+  /** 首启动隐私政策：未同意前不初始化数据库之外的服务，也不发网络请求 */
+  @Local showPrivacyDialog: boolean = false;
+  @Local showPrivacyText: boolean = false;
   private win: window.Window | null = null;
   /** 窗口尺寸回调；注销时必须用同一个引用 */
   private onWinResize: ((size: window.Size) => void) | null = null;
@@ -174,12 +178,40 @@ struct Index {
   /** MV 播放器（Video 组件用） */
   private videoCtl: VideoController = new VideoController();
 
+  /** 同意隐私政策：落盘标记，然后补跑被推迟的初始化 */
+  private async onPrivacyAgree(): Promise<void> {
+    await settings.setPrivacyAgreed(true);
+    this.showPrivacyDialog = false;
+    this.showPrivacyText = false;
+    const ctx = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    await this.startServices(ctx);
+  }
+
+  /** 不同意：本应用所有功能都要读本地文件或联网，没有可降级的部分 */
+  private onPrivacyReject(): void {
+    const ctx = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    this.showPrivacyDialog = false;
+    ctx.terminateSelf();
+  }
+
   async aboutToAppear(): Promise<void> {
     const ctx = this.getUIContext().getHostContext() as common.UIAbilityContext;
     // 安全区读取顺带完成断点初始化与窗口尺寸监听
     await this.readSafeArea(ctx);
     // 设置最先读：主题色要在首帧就正确，不能等界面画完再变色
     await settings.init(ctx);
+
+    // 未同意隐私政策时只停在设置读取这一步：
+    // 曲库扫描、网易云凭据、在线推荐都涉及个人信息与网络请求，必须等用户点同意
+    if (!settings.state.privacyAgreed) {
+      this.showPrivacyDialog = true;
+      return;
+    }
+    await this.startServices(ctx);
+  }
+
+  /** 隐私政策同意后才执行：数据库、下载、曲库恢复与在线内容 */
+  private async startServices(ctx: common.UIAbilityContext): Promise<void> {
     // 再把数据库开起来，后面的曲库/歌单读取都依赖它
     await db.init(ctx);
     // 下载任务：恢复上次队列，把「下载中」改成「已暂停」
@@ -515,6 +547,15 @@ struct Index {
       // 新建歌单压在选歌单之上：从选歌单里点「新建」要能盖住它
       if (this.showCreate) {
         this.createPlaylistDialog()
+      }
+
+      // 隐私政策盖在所有浮层之上：未同意前用户不该接触到任何数据入口
+      if (this.showPrivacyDialog) {
+        this.privacyDialog()
+      }
+
+      if (this.showPrivacyText) {
+        this.privacyTextPage()
       }
 
       // 隐藏的网页：只为拿到网易云的风控指纹（ydDeviceToken）和 sDeviceId。
@@ -1123,6 +1164,11 @@ struct Index {
 
   /** 进设置子页：从右侧推入 */
   private enterSettingsPage(page: string): void {
+    // 隐私政策是独立浮层，不占用设置子页栈
+    if (page === 'privacy') {
+      this.showPrivacyText = true;
+      return;
+    }
     this.settingsShiftX = 22;
     this.settingsFade = 0;
     this.settingsPage = page;
@@ -1669,7 +1715,7 @@ struct Index {
     Column({ space: 2 }) {
       this.settingsSectionIntro('关于', 'MEMI 輕音 · 本地优先的音乐播放器')
       Column() {
-        this.settingsInfoRow('版本', '0.1.0 · 鸿蒙原生')
+        this.settingsInfoRow('版本', '0.2.0 · 鸿蒙原生')
         this.settingsDividerPlain()
         this.settingsInfoRow('曲库', `${this.lib.songs.length} 首 · ${this.totalDurationText()}`)
         this.settingsDividerPlain()
@@ -1684,6 +1730,17 @@ struct Index {
       .borderWidth(0.5)
       .borderColor('#18FFFFFF')
       .clip(true)
+
+      Column() {
+        this.settingsNavRow('私', '隐私政策', '看我们处理哪些数据、存在哪里', 'privacy')
+      }
+      .width('100%')
+      .borderRadius(20)
+      .backgroundColor('#0DFFFFFF')
+      .borderWidth(0.5)
+      .borderColor('#18FFFFFF')
+      .clip(true)
+      .margin({ top: 10 })
 
       Text('内容来自网易云音乐公开接口，仅用于个人试听。')
         .fontSize(9)
@@ -1950,6 +2007,148 @@ struct Index {
         settings.setDefaultSpeed(v);
         audioPlayer.setSpeed(v);
       })
+  }
+
+  /** 首启动隐私政策弹窗：同意前不读曲库、不联网 */
+  @Builder
+  privacyDialog() {
+    // 遮罩直接用 Stack 自身底色，避免多一层空容器把卡片的点击吃掉
+    Stack() {
+      Column({ space: 12 }) {
+        Text('隐私与数据')
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(TEXT_MAIN)
+          .width('100%')
+
+        Text(PRIVACY_INTRO)
+          .fontSize(12)
+          .lineHeight(20)
+          .fontColor(TEXT_SUB)
+          .width('100%')
+
+        Column({ space: 3 }) {
+          Text('· 只读取你选择的音乐文件，不上传任何音频')
+            .fontSize(11)
+            .fontColor('#B3A49C')
+            .width('100%')
+          Text('· 不含统计、广告、崩溃上报 SDK')
+            .fontSize(11)
+            .fontColor('#B3A49C')
+            .width('100%')
+          Text('· 网易云登录凭据只存在本机')
+            .fontSize(11)
+            .fontColor('#B3A49C')
+            .width('100%')
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+
+        Text('查看完整隐私政策 ›')
+          .fontSize(12)
+          .fontColor(settings.accent())
+          .padding({ top: 2, bottom: 2 })
+          .onClick(() => {
+            this.showPrivacyText = true;
+          })
+
+        Row({ space: 10 }) {
+          Text('暂不')
+            .fontSize(14)
+            .fontColor(TEXT_SUB)
+            .height(44)
+            .layoutWeight(1)
+            .textAlign(TextAlign.Center)
+            .borderRadius(22)
+            .backgroundColor('#14FFFFFF')
+            .onClick(() => {
+              this.onPrivacyReject();
+            })
+
+          Text('同意并继续')
+            .fontSize(14)
+            .fontColor('#241C18')
+            .height(44)
+            .layoutWeight(1)
+            .textAlign(TextAlign.Center)
+            .borderRadius(22)
+            .backgroundColor(settings.accent())
+            .onClick(() => {
+              this.onPrivacyAgree();
+            })
+        }
+        .width('100%')
+        .margin({ top: 4 })
+      }
+      .width('86%')
+      .constraintSize({ maxWidth: 420 })
+      .padding({ top: 22, bottom: 18, left: 20, right: 20 })
+      .borderRadius(24)
+      .backgroundColor('#2E2521')
+      .borderWidth(1)
+      .borderColor('#1FFFFFFF')
+      .shadow({ radius: 30, color: '#66000000', offsetX: 0, offsetY: 12 })
+    }
+    .width('100%')
+    .height('100%')
+    .backgroundColor('#CC000000')
+  }
+
+  /** 隐私政策全文 */
+  @Builder
+  privacyTextPage() {
+    Column() {
+      Row({ space: 6 }) {
+        this.topIcon($r('app.media.ic_nav_back'), TEXT_MAIN, () => {
+          this.showPrivacyText = false;
+        })
+        Text('隐私政策')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(TEXT_MAIN)
+        Blank()
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+      .padding({ top: this.topInset + 8, bottom: 8 })
+
+      Scroll() {
+        Column({ space: 16 }) {
+          Text(`更新日期：${PRIVACY_UPDATED}`)
+            .fontSize(10)
+            .fontColor('#5A4A42')
+            .width('100%')
+
+          ForEach(PRIVACY_SECTIONS, (sec: PrivacySection) => {
+            Column({ space: 6 }) {
+              Text(sec.heading)
+                .fontSize(14)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(TEXT_MAIN)
+                .width('100%')
+              ForEach(sec.paragraphs, (p: string, i: number) => {
+                Text(p)
+                  .fontSize(12)
+                  .lineHeight(21)
+                  .fontColor(TEXT_SUB)
+                  .width('100%')
+              }, (p: string, i: number) => `${sec.heading}_${i}`)
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Start)
+          }, (sec: PrivacySection) => sec.heading)
+        }
+        .width('100%')
+        .padding({ bottom: this.bottomInset + 24 })
+      }
+      .width('100%')
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+    }
+    .width('100%')
+    .height('100%')
+    .padding({ left: 20, right: 20 })
+    .backgroundColor('#1C1613')
   }
 
   /** 底部页签与迷你播放器的通透度：越大底色越透、背景模糊越强 */
