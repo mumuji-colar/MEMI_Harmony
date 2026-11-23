@@ -485,32 +485,36 @@ struct Index {
         this.queueOverlay()
       }
 
-      if (this.showCreate) {
-        this.createPlaylistDialog()
+      if (this.artistSt.open) {
+        this.artistOverlay()
       }
 
-      if (this.pickerPath.length > 0) {
-        this.pickerOverlay()
+      if (this.mvSt.open) {
+        this.mvOverlay()
+      }
+
+      // 评论可以叠在艺人页和 MV 上
+      if (this.commentSt.open) {
+        this.commentOverlay()
       }
 
       if (this.showLogin) {
         this.loginOverlay()
       }
 
-      if (this.artistSt.open) {
-        this.artistOverlay()
-      }
-
-      if (this.commentSt.open) {
-        this.commentOverlay()
-      }
-
+      // 长按菜单能盖住上面所有页面
       if (this.actionOpen) {
         this.songActionOverlay()
       }
 
-      if (this.mvSt.open) {
-        this.mvOverlay()
+      // 选歌单压在菜单之上；菜单里点「加入歌单」即使没关菜单也不会被遮
+      if (this.pickerPath.length > 0) {
+        this.pickerOverlay()
+      }
+
+      // 新建歌单压在选歌单之上：从选歌单里点「新建」要能盖住它
+      if (this.showCreate) {
+        this.createPlaylistDialog()
       }
 
       // 隐藏的网页：只为拿到网易云的风控指纹（ydDeviceToken）和 sDeviceId。
