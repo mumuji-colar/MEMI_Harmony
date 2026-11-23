@@ -3061,16 +3061,25 @@ struct Index {
                   ForEach(this.songPages(block.songs), (page: Song[], pi: number) => {
                     Column() {
                       if (this.isWide) {
+                        // 两列各占一半，用 layoutWeight 而不是算好的像素宽度：
+                        // 三折叠在单屏/双屏/三屏之间切换时窗口宽度会变，固定像素会留在旧宽度上
                         Row({ space: 18 }) {
-                          this.homeSongColumn(block.key, page.slice(0, 3), pi * 6,
-                            (this.contentWidth - 18) / 2, block.songs)
-                          this.homeSongColumn(block.key, page.slice(3, 6), pi * 6 + 3,
-                            (this.contentWidth - 18) / 2, block.songs)
+                          Column() {
+                            this.homeSongColumn(block.key, page.slice(0, 3), pi * 6, block.songs)
+                          }
+                          .layoutWeight(1)
+                          .alignItems(HorizontalAlign.Start)
+
+                          Column() {
+                            this.homeSongColumn(block.key, page.slice(3, 6), pi * 6 + 3, block.songs)
+                          }
+                          .layoutWeight(1)
+                          .alignItems(HorizontalAlign.Start)
                         }
                         .width('100%')
                         .alignItems(VerticalAlign.Top)
                       } else {
-                        this.homeSongColumn(block.key, page, pi * 3, '100%', block.songs)
+                        this.homeSongColumn(block.key, page, pi * 3, block.songs)
                       }
                     }
                     .width('100%')
@@ -3180,15 +3189,15 @@ struct Index {
     })
   }
 
-  /** 首页歌曲页里的一列：宽屏一页两列，窄屏一页一列 */
+  /** 首页歌曲页里的一列：宽屏一页两列（由外层 layoutWeight 分宽），窄屏一列铺满 */
   @Builder
-  homeSongColumn(blockKey: string, chunk: Song[], baseIndex: number, colWidth: Length, queue: Song[]) {
+  homeSongColumn(blockKey: string, chunk: Song[], baseIndex: number, queue: Song[]) {
     Column() {
       ForEach(chunk, (song: Song, si: number) => {
         this.homeSongRow(song, baseIndex + si, queue)
       }, (song: Song) => `hb_${blockKey}_${song.path}`)
     }
-    .width(colWidth)
+    .width('100%')
     .alignItems(HorizontalAlign.Start)
   }
 
