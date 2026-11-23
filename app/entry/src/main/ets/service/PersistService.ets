@@ -174,7 +174,8 @@ export class PersistService {
   }
 
   /** 把选择器给的临时授权转成长期授权 */
-  async persistUris(uris: string[]): Promise<void> {    if (uris.length === 0) {
+  async persistUris(uris: string[]): Promise<void> {
+    if (uris.length === 0) {
       return;
     }
     const policies: fileShare.PolicyInfo[] = [];
@@ -190,6 +191,56 @@ export class PersistService {
     } catch (e) {
       const err = e as BusinessError;
       Logger.e(`持久化授权失败 ${err.code}: ${err.message}`);
+    }
+  }
+
+  /**
+   * 重启后激活曲库里的持久化授权。
+   *
+   * persistPermission 只是把授权记进系统，应用进程或设备重启后还要
+   * activatePermission 激活一次才能真的读文件；漏了这步的表现是
+   * 「曲库列表正常，一播就报权限错误」。
+   *
+   * 曲目路径本身就是选择器返回的 URI，直接拿来激活，不再单独存一份清单。
+   */
+  async activateUris(songs: Song[]): Promise<void> {
+    const uris: string[] = [];
+    for (let i = 0; i < songs.length; i++) {
+      const p = songs[i].path;
+      // 在线曲目不是文件 URI，跳过；同一文件只激活一次
+      if (p.indexOf('file://') === 0 && uris.indexOf(p) < 0) {
+        uris.push(p);
+      }
+    }
+    if (uris.length === 0) {
+      return;
+    }
+    // 单个请求最多 500 条，超了要分批，否则接口直接报参数错误
+    const BATCH = 500;
+    let activated = 0;
+    let failed = 0;
+    for (let start = 0; start < uris.length; start += BATCH) {
+      const policies: fileShare.PolicyInfo[] = [];
+      const end = Math.min(start + BATCH, uris.length);
+      for (let i = start; i < end; i++) {
+        policies.push({
+          uri: uris[i],
+          operationMode: fileShare.OperationMode.READ_MODE
+        });
+      }
+      try {
+        await fileShare.activatePermission(policies);
+        activated += policies.length;
+      } catch (e) {
+        const err = e as BusinessError;
+        failed += policies.length;
+        Logger.w(`激活 ${policies.length} 个 URI 授权失败 ${err.code}: ${err.message}`);
+      }
+    }
+    if (failed > 0) {
+      Logger.w(`持久化授权激活完成：成功 ${activated}，失败 ${failed}（可能已被用户撤销）`);
+    } else {
+      Logger.i(`已激活 ${activated} 个 URI 授权`);
     }
   }
 }

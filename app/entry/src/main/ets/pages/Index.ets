@@ -232,6 +232,8 @@ struct Index {
     // 收藏和自建歌单里可能有在线曲目，先把元数据索引装好
     library.setRemoteSongs(await db.loadRemoteSongs());
     const songs = await persist.loadLibrary(ctx);
+    // 重启后系统会冻结持久化授权，先激活再让曲库可用，否则点播放报权限错误
+    await persist.activateUris(songs);
     if (songs.length === 0) {
       await this.refreshFavorites();
       return;
