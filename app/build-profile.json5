@@ -1,10 +1,24 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "D:/MEMI-Harmony/signing/memi_release.cer",
+          "keyAlias": "memi111",
+          "keyPassword": "0000001BFF752C47CD3F680B03445C2E3A84382320DFD990E5A5C874578572ADCBAC83EE554C9AA584F614",
+          "profile": "D:/MEMI-Harmony/signing/memi_release.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "D:/MEMI-Harmony/signing/memi.p12",
+          "storePassword": "0000001B60F3421B919F7A7E5F7B9FEF2056326C5B4F8BAC808F581C3575DF6944115C30DAB36EFDD2D06C"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",
-        "signingConfig": "signconfig",
+        "signingConfig": "default",
         "compatibleSdkVersion": "5.0.0(12)",
         "targetSdkVersion": "26.0.0",
         "runtimeOS": "HarmonyOS",
