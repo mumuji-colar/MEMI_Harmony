@@ -1,5 +1,5 @@
 import { picker } from '@kit.CoreFileKit';
-import { common } from '@kit.AbilityKit';
+import { common, bundleManager } from '@kit.AbilityKit';
 import { window, display, curves } from '@kit.ArkUI';
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { audioPlayer, PlayerState } from '../service/AudioPlayer';
@@ -141,6 +141,8 @@ struct Index {
   @Local gridCols: number = 3;
   /** 宽屏左侧导航栏宽度 */
   private railWidth: number = 88;
+  /** 版本号：从安装包信息读取，发版只改 app.json5，界面自动跟上 */
+  private appVer: string = '0.3.0';
   /**
    * 宽屏播放页专用尺寸：左屏内容列宽与封面边长。
    * 不跟着全局断点算，因为分栏后每屏只有半幅宽度，
@@ -196,6 +198,7 @@ struct Index {
 
   async aboutToAppear(): Promise<void> {
     const ctx = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    this.appVer = this.readVersionName();
     // 安全区读取顺带完成断点初始化与窗口尺寸监听
     await this.readSafeArea(ctx);
     // 设置最先读：主题色要在首帧就正确，不能等界面画完再变色
@@ -380,6 +383,21 @@ struct Index {
       } catch (e2) {
         Logger.w('屏幕宽度也读不到，保持默认布局');
       }
+    }
+  }
+
+  /**
+   * 读安装包的 versionName。
+   * 以前这里写死过 0.1.0 / 0.2.0，发版后忘了改就露馅，改成运行时读。
+   */
+  private readVersionName(): string {
+    try {
+      return bundleManager.getBundleInfoForSelfSync(
+        bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT).versionName;
+    } catch (e) {
+      const err = e as BusinessError;
+      Logger.w(`读版本号失败 ${err.code}`);
+      return this.appVer;
     }
   }
 
@@ -1032,7 +1050,7 @@ struct Index {
 
       this.settingsSectionIntro('关于', '版本与本地统计')
       Column() {
-        this.settingsNavRow('i', '关于 MEMI 輕音', `0.1.0 · 曲库 ${this.lib.songs.length} 首`, 'about')
+        this.settingsNavRow('i', '关于 MEMI 輕音', `${this.appVer} · 曲库 ${this.lib.songs.length} 首`, 'about')
       }
       .width('100%')
       .borderRadius(20)
@@ -1717,7 +1735,7 @@ struct Index {
     Column({ space: 2 }) {
       this.settingsSectionIntro('关于', 'MEMI 輕音 · 本地优先的音乐播放器')
       Column() {
-        this.settingsInfoRow('版本', '0.2.0 · 鸿蒙原生')
+        this.settingsInfoRow('版本', `${this.appVer} · 鸿蒙原生`)
         this.settingsDividerPlain()
         this.settingsInfoRow('曲库', `${this.lib.songs.length} 首 · ${this.totalDurationText()}`)
         this.settingsDividerPlain()
