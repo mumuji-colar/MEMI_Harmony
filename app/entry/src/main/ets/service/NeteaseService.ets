@@ -456,11 +456,12 @@ export class NeteaseService {
 
   /**
    * 首页每段拉多少首。
-   * 界面一屏只露 3 张卡片，剩下的靠横向滑动看，所以这里要多取一些；
+   * 窄屏一页露 3 首、宽屏一页露 6 首（2 列 × 3 行），剩下的靠横向滑动翻页；
    * 歌单类接口本来就是拉整份再截取，多取几首不增加请求数。
    */
   private async songsOf(key: string): Promise<Song[]> {
-    const take = 20;
+    // 24 首：窄屏 3 首/页 = 8 页，宽屏 6 首/页 = 4 页，正好整除不留半空页
+    const take = 24;
     if (key === 'radar') {
       return await fetchRadarSongs(take);
     }

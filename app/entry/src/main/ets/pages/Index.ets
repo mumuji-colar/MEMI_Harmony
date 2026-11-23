@@ -3056,19 +3056,28 @@ struct Index {
             if (block.state === HomeBlockState.READY) {
               this.homeSectionHeader(block.glyph, block.title)
               if (block.kind === HomeBlockKind.SONGS) {
-                // 一页三行，左右滑动翻页（Swiper 自带吸附，每次正好翻三条）
+                // 窄屏一页三行；宽屏一页 2 列 × 3 行。左右滑动翻页，Swiper 自带吸附
                 Swiper() {
                   ForEach(this.songPages(block.songs), (page: Song[], pi: number) => {
                     Column() {
-                      ForEach(page, (song: Song, si: number) => {
-                        this.homeSongRow(song, pi * 3 + si, block.songs)
-                      }, (song: Song) => `hb_${block.key}_${song.path}`)
+                      if (this.isWide) {
+                        Row({ space: 18 }) {
+                          this.homeSongColumn(block.key, page.slice(0, 3), pi * 6,
+                            (this.contentWidth - 18) / 2, block.songs)
+                          this.homeSongColumn(block.key, page.slice(3, 6), pi * 6 + 3,
+                            (this.contentWidth - 18) / 2, block.songs)
+                        }
+                        .width('100%')
+                        .alignItems(VerticalAlign.Top)
+                      } else {
+                        this.homeSongColumn(block.key, page, pi * 3, '100%', block.songs)
+                      }
                     }
                     .width('100%')
                   }, (page: Song[], pi: number) => `pg_${block.key}_${pi}`)
                 }
                 .width('100%')
-                .height(168)
+                .height(this.isWide ? 194 : 168)
                 .indicator(false)
                 .loop(false)
                 .cachedCount(1)
@@ -3135,17 +3144,17 @@ struct Index {
         .width(16)
         .textAlign(TextAlign.Center)
 
-      this.songCover(song, 42)
+      this.songCover(song, this.isWide ? 50 : 42)
 
       Column({ space: 3 }) {
         Text(song.title)
-          .fontSize(14)
+          .fontSize(this.isWide ? 15 : 14)
           .fontColor(this.isCurrent(song) ? settings.accent() : TEXT_MAIN)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
         Text(song.artist.length > 0 ? song.artist : '未知艺术家')
-          .fontSize(10)
+          .fontSize(this.isWide ? 11 : 10)
           .fontColor(TEXT_SUB)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -3165,17 +3174,30 @@ struct Index {
         })
     }
     .width('100%')
-    .padding({ top: 6, bottom: 6 })
+    .padding({ top: this.isWide ? 7 : 6, bottom: this.isWide ? 7 : 6 })
     .onClick(() => {
       playback.playSong(song, queue);
     })
   }
 
-  /** 把一段歌曲按每页 3 首切开，供首页横向翻页 */
+  /** 首页歌曲页里的一列：宽屏一页两列，窄屏一页一列 */
+  @Builder
+  homeSongColumn(blockKey: string, chunk: Song[], baseIndex: number, colWidth: Length, queue: Song[]) {
+    Column() {
+      ForEach(chunk, (song: Song, si: number) => {
+        this.homeSongRow(song, baseIndex + si, queue)
+      }, (song: Song) => `hb_${blockKey}_${song.path}`)
+    }
+    .width(colWidth)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  /** 把一段歌曲按每页 3 首切开（宽屏一页 6 首：2 列 × 3 行），供首页横向翻页 */
   songPages(songs: Song[]): Song[][] {
+    const size = this.isWide ? 6 : 3;
     const pages: Song[][] = [];
-    for (let i = 0; i < songs.length; i += 3) {
-      pages.push(songs.slice(i, i + 3));
+    for (let i = 0; i < songs.length; i += size) {
+      pages.push(songs.slice(i, i + size));
     }
     return pages;
   }
