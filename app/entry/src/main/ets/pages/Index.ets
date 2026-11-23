@@ -6345,7 +6345,6 @@ struct Index {
     .onClick(onTap)
   }
 
-  @Builder
   /**
    * 收藏按钮。注意这里不能带参数：
    * 带参 @Builder 会按参数缓存，内部读收藏状态不会跟着状态重绘，
