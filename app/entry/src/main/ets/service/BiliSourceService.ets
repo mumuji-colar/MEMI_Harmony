@@ -197,7 +197,8 @@ export class BiliSourceService {
   }
 
   private scoreCandidate(song: Song, item: BiliSearchItem): number {
-    return this.scoreText(song, item.title, item.author, item.durationSec);
+    return this.scoreText(song, item.title, item.author, item.durationSec)
+      + this.playBonus(item.play);
   }
 
   private scoreText(song: Song, title: string, author: string, durationSec: number): number {
@@ -217,6 +218,7 @@ export class BiliSourceService {
       score += 25;
     }
     score += this.durationScore(song.durationMs, durationSec);
+    score += this.keywordBonus(title, author, song);
     return score;
   }
 
@@ -250,6 +252,47 @@ export class BiliSourceService {
       return -15;
     }
     return 0;
+  }
+
+  /**
+   * 关键词权重：官方、无损、高音质这类词优先；
+   * 翻唱、伴奏、现场等版本降权。歌曲本身标题里就带这些词的（比如本来就是钢琴版）不罚。
+   */
+  private keywordBonus(title: string, author: string, song: Song): number {
+    const text = this.normalize(`${title} ${author}`);
+    const songText = this.normalize(song.title);
+    let bonus = 0;
+
+    if (text.indexOf('官方') >= 0) {
+      bonus += 14;
+    }
+    if (text.indexOf('无损') >= 0 || text.indexOf('高音质') >= 0
+      || text.indexOf('高品质') >= 0 || text.indexOf('hires') >= 0
+      || text.indexOf('hi res') >= 0) {
+      bonus += 10;
+    }
+    if (text.indexOf('完整版') >= 0 || text.indexOf('原版') >= 0 || text.indexOf('正版') >= 0) {
+      bonus += 6;
+    }
+
+    const badWords: string[] = ['翻唱', 'cover', '伴奏', '纯音乐', '钢琴', '吉他', '口琴',
+      '八音盒', 'dj', 'remix', '鬼畜', '片段', '试听', '直播', '现场', 'live', '串烧', '合辑'];
+    for (let i = 0; i < badWords.length; i++) {
+      const w = badWords[i];
+      if (text.indexOf(w) >= 0 && songText.indexOf(w) < 0) {
+        bonus -= 12;
+      }
+    }
+    return bonus;
+  }
+
+  /** 播放量只做很小的加权，避免热门但不对的版本压过精确匹配 */
+  private playBonus(play: number): number {
+    if (play <= 0) {
+      return 0;
+    }
+    const v = Math.log10(play) * 1.2;
+    return v > 6 ? 6 : v;
   }
 
   private contains(normalizedText: string, rawNeedle: string): boolean {

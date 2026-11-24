@@ -2,8 +2,8 @@
   "app": {
     "bundleName": "com.mmc.merimusicplayer",
     "vendor": "moe.ouom",
-    "versionCode": 300100,
-    "versionName": "0.3.1",
+    "versionCode": 300200,
+    "versionName": "0.3.2",
     "icon": "$media:layered_image",
     "label": "$string:app_name"
   }
