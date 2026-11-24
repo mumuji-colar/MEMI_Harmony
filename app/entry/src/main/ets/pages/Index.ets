@@ -7333,6 +7333,9 @@ struct Index {
       return '在线音源';
     }
     const parts: string[] = [];
+    if (info.source === 'bili') {
+      parts.push('B站音源');
+    }
     const level = this.qualityLevelText(info.level);
     if (level.length > 0) {
       parts.push(level);

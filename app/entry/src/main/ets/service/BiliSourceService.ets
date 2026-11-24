@@ -203,21 +203,33 @@ export class BiliSourceService {
   private scoreText(song: Song, title: string, author: string, durationSec: number): number {
     const normTitle = this.normalize(title);
     const normAuthor = this.normalize(author);
-    const titleHit = this.contains(normTitle, song.title);
+    // 歌名里的「(钢琴版)」「[原唱: xxx]」这类后缀先剥掉再比，
+    // 否则只能靠「原唱/周杰伦」这种词碰运气，会配到完全不同的歌。
+    const core = this.coreTitle(song.title);
+    if (!this.contains(normTitle, core)) {
+      return -100;
+    }
     const artistHit = song.artist.length > 0
       && (this.contains(normTitle, song.artist) || this.contains(normAuthor, song.artist));
 
-    let score = 0;
-    if (titleHit) {
-      score += 55;
-    } else {
-      score += this.tokenOverlap(normTitle, song.title);
-    }
+    let score = 55;
     if (artistHit) {
       score += 25;
     }
     score += this.durationScore(song.durationMs, durationSec);
     return score;
+  }
+
+  /** 去掉括号修饰，留下真正的歌名 */
+  private coreTitle(title: string): string {
+    const stripped = title
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/（[^）]*）/g, ' ')
+      .replace(/\[[^\]]*\]/g, ' ')
+      .replace(/【[^】]*】/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return stripped.length >= 2 ? stripped : title.trim();
   }
 
   private durationScore(originalMs: number, candidateSec: number): number {
@@ -246,23 +258,6 @@ export class BiliSourceService {
       return false;
     }
     return normalizedText.replace(/ /g, '').indexOf(needle) >= 0;
-  }
-
-  private tokenOverlap(normalizedText: string, rawNeedle: string): number {
-    const tokens = this.normalize(rawNeedle).split(' ').filter((t: string) => t.length >= 2);
-    if (tokens.length === 0) {
-      return 0;
-    }
-    let hits = 0;
-    for (let i = 0; i < tokens.length; i++) {
-      if (normalizedText.indexOf(tokens[i]) >= 0) {
-        hits++;
-      }
-    }
-    if (hits === tokens.length) {
-      return 35;
-    }
-    return hits > 0 ? 18 : 0;
   }
 
   /** 小写、保留中英日韩数字，其余变空格 */
