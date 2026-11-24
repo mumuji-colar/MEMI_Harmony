@@ -35,7 +35,7 @@ import { Logger } from '../common/Logger';
 import { formatTime } from '../common/Format';
 
 const TEXT_MAIN: string = '#F5EDE8';
-const TEXT_SUB: string = '#8E8079';
+const TEXT_SUB: string = '#A0938B';
 const SPEED_OPTIONS: number[] = [0.5, 1, 1.25, 1.5, 2];
 
 
@@ -1061,7 +1061,7 @@ struct Index {
 
       Text('MEMI 輕音 · 本地优先的音乐播放器')
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
         .textAlign(TextAlign.Center)
         .margin({ top: 18, bottom: 12 })
@@ -1098,7 +1098,7 @@ struct Index {
           .width('100%')
         Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
           .fontSize(10)
-          .fontColor('#7A6A62')
+          .fontColor(TEXT_SUB)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
@@ -1136,7 +1136,7 @@ struct Index {
         .fontColor(settings.accent())
       Text(desc)
         .fontSize(10)
-        .fontColor('#8C7C74')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .padding({ left: 4, top: 16, bottom: 7 })
@@ -1162,7 +1162,7 @@ struct Index {
           .width('100%')
         Text(subtitle)
           .fontSize(10)
-          .fontColor('#7A6A62')
+          .fontColor(TEXT_SUB)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
@@ -1172,7 +1172,7 @@ struct Index {
 
       Text('›')
         .fontSize(18)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .height(58)
@@ -1243,7 +1243,7 @@ struct Index {
           .width('100%')
         Text(desc)
           .fontSize(10)
-          .fontColor('#7A6A62')
+          .fontColor(TEXT_SUB)
           .width('100%')
       }
       .layoutWeight(1)
@@ -1270,7 +1270,7 @@ struct Index {
           .width('100%')
         Text(desc)
           .fontSize(10)
-          .fontColor('#7A6A62')
+          .fontColor(TEXT_SUB)
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
@@ -1280,7 +1280,7 @@ struct Index {
 
       Text('›')
         .fontSize(18)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .padding({ top: 12, bottom: 12, left: 14, right: 14 })
@@ -1331,7 +1331,7 @@ struct Index {
 
             Text(item.name)
               .fontSize(9)
-              .fontColor(this.st.accentIndex === i ? TEXT_MAIN : '#5A4A42')
+              .fontColor(this.st.accentIndex === i ? TEXT_MAIN : TEXT_SUB)
           }
           .onClick(() => {
             settings.setAccentIndex(i);
@@ -1393,7 +1393,7 @@ struct Index {
 
         Text('关闭动效后，转场与唱片旋转会立刻完成；省电模式下手感更接近本地播放器')
           .fontSize(9)
-          .fontColor('#5A4A42')
+          .fontColor(TEXT_SUB)
           .width('100%')
           .padding({ left: 14, right: 14, bottom: 12 })
       }
@@ -1443,7 +1443,7 @@ struct Index {
 
         Text('启动时生效')
           .fontSize(9)
-          .fontColor('#5A4A42')
+          .fontColor(TEXT_SUB)
           .width('100%')
       }
       .width('100%')
@@ -1508,7 +1508,7 @@ struct Index {
 
       Text('导入的歌词存在应用沙箱里，卸载应用会一起清掉')
         .fontSize(9)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
         .width('100%')
         .padding({ left: 4, top: 8 })
     }
@@ -1582,14 +1582,14 @@ struct Index {
               .width('100%')
             Text(`${this.dl.doneSongs.length} 首 · ${formatBytes(this.dl.totalBytes)}`)
               .fontSize(10)
-              .fontColor('#7A6A62')
+              .fontColor(TEXT_SUB)
               .width('100%')
           }
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
           Text('›')
             .fontSize(18)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
         }
         .width('100%')
         .height(58)
@@ -1643,7 +1643,7 @@ struct Index {
             .width('100%')
           Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
             .fontSize(10)
-            .fontColor('#7A6A62')
+            .fontColor(TEXT_SUB)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
@@ -1697,7 +1697,7 @@ struct Index {
 
         Text('非会员选择无损会自动降档到 320k')
           .fontSize(9)
-          .fontColor('#5A4A42')
+          .fontColor(TEXT_SUB)
           .width('100%')
       }
       .width('100%')
@@ -1764,7 +1764,7 @@ struct Index {
 
       Text('内容来自网易云音乐公开接口，仅用于个人试听。')
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
         .textAlign(TextAlign.Center)
         .margin({ top: 18, bottom: 8 })
@@ -1819,7 +1819,7 @@ struct Index {
 
       Text('缓存里主要是封面解码的中间文件，清掉后下次加载会重新生成，不影响播放。')
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
         .padding({ left: 4, top: 10 })
     }
@@ -1870,7 +1870,7 @@ struct Index {
 
       Text('备份不含音频文件。换设备后先把曲库导入一遍，歌单里的路径会自动接上。')
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
         .padding({ left: 4, top: 12 })
     }
@@ -2136,7 +2136,7 @@ struct Index {
         Column({ space: 16 }) {
           Text(`更新日期：${PRIVACY_UPDATED}`)
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .width('100%')
 
           ForEach(PRIVACY_SECTIONS, (sec: PrivacySection) => {
@@ -2358,7 +2358,7 @@ struct Index {
             .fontColor(TEXT_SUB)
           Text('点右上角新建，再到「歌曲」里长按加入')
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .textAlign(TextAlign.Center)
         }
         .width('100%')
@@ -2391,7 +2391,7 @@ struct Index {
 
                 Text('›')
                   .fontSize(18)
-                  .fontColor('#4D423C')
+                  .fontColor(TEXT_SUB)
               }
               .width('100%')
               .padding({ top: 10, bottom: 10, left: 6, right: 6 })
@@ -2455,7 +2455,7 @@ struct Index {
             .fontColor(TEXT_SUB)
           Text('到「歌曲」里长按一首歌，选「加入歌单」')
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .textAlign(TextAlign.Center)
         }
         .width('100%')
@@ -2477,7 +2477,7 @@ struct Index {
           .fontSize(15)
           .fontColor(TEXT_MAIN)
         TextInput({ placeholder: '歌单名称' })
-          .placeholderColor('#6B5D56')
+          .placeholderColor(TEXT_SUB)
           .placeholderFont({ size: 12 })
           .fontColor(TEXT_MAIN)
           .fontSize(13)
@@ -2607,7 +2607,7 @@ struct Index {
   searchRow() {
     Row({ space: 10 }) {
       TextInput({ placeholder: '搜索歌曲、艺术家、专辑' })
-        .placeholderColor('#6B5D56')
+        .placeholderColor(TEXT_SUB)
         .placeholderFont({ size: 12 })
         .fontColor(TEXT_MAIN)
         .fontSize(13)
@@ -2788,7 +2788,7 @@ struct Index {
             .fontColor(TEXT_SUB)
           Text('每首歌起播时会记一次，统计由此而来')
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
         }
         .width('100%')
         .padding({ top: 60, bottom: 60 })
@@ -2815,7 +2815,7 @@ struct Index {
               Column({ space: 6 }) {
                 Text(`${day.count}`)
                   .fontSize(9)
-                  .fontColor(day.count > 0 ? TEXT_MAIN : '#4A403A')
+                  .fontColor(day.count > 0 ? TEXT_MAIN : TEXT_SUB)
                 Stack({ alignContent: Alignment.Bottom }) {
                   Column().width('100%').height(86).borderRadius(6).backgroundColor('#08FFFFFF')
                   Column().width('100%').height(this.barHeight(day.count)).borderRadius(6)
@@ -2823,7 +2823,7 @@ struct Index {
                 }
                 .width('100%')
                 .height(86)
-                Text(day.label).fontSize(8).fontColor('#6B5D56')
+                Text(day.label).fontSize(8).fontColor(TEXT_SUB)
               }
               .layoutWeight(1)
             }, (day: StatsDayItem) => day.label)
@@ -2843,7 +2843,7 @@ struct Index {
             Blank()
             Text('次数')
               .fontSize(9)
-              .fontColor('#6B5D56')
+              .fontColor(TEXT_SUB)
           }
           .width('100%')
           .padding({ left: 14, right: 14, top: 12, bottom: 4 })
@@ -2863,7 +2863,7 @@ struct Index {
 
         Text('收听时长为「次数 × 曲目时长」的估算值，快进和切歌会让它比真实值偏长')
           .fontSize(9)
-          .fontColor('#4A403A')
+          .fontColor(TEXT_SUB)
           .width('100%')
           .textAlign(TextAlign.Center)
           .margin({ bottom: 8 })
@@ -2879,7 +2879,7 @@ struct Index {
   onlineSearchRow() {
     Row({ space: 8 }) {
       TextInput({ text: this.online.keyword, placeholder: '搜索网易云：歌名、歌手、歌单' })
-        .placeholderColor('#6B5D56')
+        .placeholderColor(TEXT_SUB)
         .placeholderFont({ size: 12 })
         .fontColor(TEXT_MAIN)
         .fontSize(13)
@@ -3022,7 +3022,7 @@ struct Index {
         .textAlign(TextAlign.Center)
       Text('换个关键词试试，或检查网络')
         .fontSize(10)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .layoutWeight(1)
@@ -3131,7 +3131,7 @@ struct Index {
 
           Text('内容来自网易云音乐公开接口，仅用于个人试听')
             .fontSize(9)
-            .fontColor('#4A403A')
+            .fontColor(TEXT_SUB)
             .width('100%')
             .textAlign(TextAlign.Center)
             .margin({ top: 18, bottom: 10 })
@@ -3169,7 +3169,7 @@ struct Index {
     Row({ space: 10 }) {
       Text(`${index + 1}`)
         .fontSize(11)
-        .fontColor(this.isCurrent(song) ? settings.accent() : '#6B5D56')
+        .fontColor(this.isCurrent(song) ? settings.accent() : TEXT_SUB)
         .width(16)
         .textAlign(TextAlign.Center)
 
@@ -3194,7 +3194,7 @@ struct Index {
 
       Text('⋯')
         .fontSize(18)
-        .fontColor('#7A6A62')
+        .fontColor(TEXT_SUB)
         .width(34)
         .height(34)
         .textAlign(TextAlign.Center)
@@ -3397,7 +3397,7 @@ struct Index {
 
       Text('›')
         .fontSize(18)
-        .fontColor('#4D423C')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .padding({ top: 8, bottom: 8, left: 4, right: 8 })
@@ -3431,7 +3431,7 @@ struct Index {
         Column() {
           Text(`${index + 1}`)
             .fontSize(11)
-            .fontColor(this.isCurrent(song) ? settings.accent() : '#5A4A42')
+            .fontColor(this.isCurrent(song) ? settings.accent() : TEXT_SUB)
         }
         .width(44)
         .height(44)
@@ -3546,7 +3546,7 @@ struct Index {
           }
           Text(`${this.online.detailSongs.length} 首`)
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .width('100%')
         }
         .layoutWeight(1)
@@ -3638,7 +3638,7 @@ struct Index {
           Image($r('app.media.ic_note'))
             .width(28)
             .height(28)
-            .fillColor('#5A4A42')
+            .fillColor(TEXT_SUB)
           Text(this.dlTab === 0 ? '还没有下载完成的歌曲' : '没有正在下载的任务')
             .fontSize(13)
             .fontColor(TEXT_MAIN)
@@ -3668,7 +3668,7 @@ struct Index {
         Row({ space: 8 }) {
           Text('文件保存在应用沙箱，卸载应用会一起删除')
             .fontSize(9)
-            .fontColor('#4A403A')
+            .fontColor(TEXT_SUB)
             .layoutWeight(1)
           Text('清空已完成')
             .fontSize(9)
@@ -3701,7 +3701,7 @@ struct Index {
           Column() {
             Text('♪')
               .fontSize(14)
-              .fontColor('#5A4A42')
+              .fontColor(TEXT_SUB)
           }
           .width(44)
           .height(44)
@@ -3755,7 +3755,7 @@ struct Index {
         Row({ space: 8 }) {
           Text(`${formatBytes(t.downloadedBytes)}${t.totalBytes > 0 ? ` / ${formatBytes(t.totalBytes)}` : ''}`)
             .fontSize(9)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .layoutWeight(1)
           if (t.status === DownloadStatus.DOWNLOADING) {
             this.downloadChip('暂停', false, () => {
@@ -3776,7 +3776,7 @@ struct Index {
         Row({ space: 8 }) {
           Text(`${formatBytes(t.totalBytes)} · ${formatTime(t.durationMs)}`)
             .fontSize(9)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .layoutWeight(1)
           this.downloadChip('播放', false, () => {
             this.playDownload(t);
@@ -3980,7 +3980,7 @@ struct Index {
                 }
                 Text(`${this.artistSt.songCount} 首单曲 · ${this.artistSt.albumCount} 张专辑 · ${this.artistSt.mvCount} 个 MV`)
                   .fontSize(9)
-                  .fontColor('#5A4A42')
+                  .fontColor(TEXT_SUB)
                   .width('100%')
               }
               .layoutWeight(1)
@@ -3993,7 +3993,7 @@ struct Index {
               Column({ space: 4 }) {
                 Text(this.artistSt.brief)
                   .fontSize(10)
-                  .fontColor('#8C7C74')
+                  .fontColor(TEXT_SUB)
                   .lineHeight(16)
                   .maxLines(this.briefOpen ? 30 : 3)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -4060,7 +4060,7 @@ struct Index {
 
             Text('资料与作品来自网易云音乐公开接口')
               .fontSize(9)
-              .fontColor('#4A403A')
+              .fontColor(TEXT_SUB)
               .width('100%')
               .textAlign(TextAlign.Center)
               .margin({ top: 4, bottom: 20 })
@@ -4117,7 +4117,7 @@ struct Index {
       .alignItems(HorizontalAlign.Start)
       Text('›')
         .fontSize(18)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .padding({ top: 8, bottom: 8, left: 2, right: 6 })
@@ -4173,7 +4173,7 @@ struct Index {
           .width('100%')
         Text(formatTime(m.durationMs))
           .fontSize(9)
-          .fontColor('#5A4A42')
+          .fontColor(TEXT_SUB)
           .width('100%')
       }
       .layoutWeight(1)
@@ -4328,7 +4328,7 @@ struct Index {
 
         Text(`♥ ${this.countText(c.likedCount)}`)
           .fontSize(9)
-          .fontColor('#5A4A42')
+          .fontColor(TEXT_SUB)
       }
       .width('100%')
 
@@ -4343,7 +4343,7 @@ struct Index {
       if (c.repliedContent.length > 0) {
         Text(`@${c.repliedUser}：${c.repliedContent}`)
           .fontSize(10)
-          .fontColor('#8C7C74')
+          .fontColor(TEXT_SUB)
           .lineHeight(15)
           .maxLines(3)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -4355,7 +4355,7 @@ struct Index {
 
       Text(this.commentDate(c.timeMs))
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
     }
     .width('100%')
@@ -4429,7 +4429,7 @@ struct Index {
 
           Text('视频流来自网易云，清晰度由账号权限决定')
             .fontSize(9)
-            .fontColor('#4A403A')
+            .fontColor(TEXT_SUB)
             .width('100%')
             .textAlign(TextAlign.Center)
             .margin({ top: 8 })
@@ -4664,7 +4664,7 @@ struct Index {
                 .fontColor(settings.accent())
               Text(`UID ${this.auth.userId}`)
                 .fontSize(10)
-                .fontColor('#5A4A42')
+                .fontColor(TEXT_SUB)
 
               Text('退出登录')
                 .fontSize(12)
@@ -4709,7 +4709,7 @@ struct Index {
 
           Text('凭据只保存在本机，用于读取你自己的歌单与会员权限')
             .fontSize(9)
-            .fontColor('#4A403A')
+            .fontColor(TEXT_SUB)
             .textAlign(TextAlign.Center)
             .width('100%')
             .margin({ top: 4, bottom: 20 })
@@ -4825,7 +4825,7 @@ struct Index {
 
       Text('扫码没反应？可切到「Cookie 导入」，从浏览器复制凭据')
         .fontSize(10)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
         .textAlign(TextAlign.Center)
     }
     .width('100%')
@@ -4842,7 +4842,7 @@ struct Index {
         .fontColor(TEXT_SUB)
         .width('100%')
       TextArea({ text: this.auth.cookieDraft, placeholder: 'MUSIC_U=xxxx; __csrf=yyyy' })
-        .placeholderColor('#5A4A42')
+        .placeholderColor(TEXT_SUB)
         .fontSize(11)
         .fontColor(TEXT_MAIN)
         .height(120)
@@ -4883,7 +4883,7 @@ struct Index {
 
       Text('只填 MUSIC_U 的值也可以；导入后会立刻校验一次')
         .fontSize(9)
-        .fontColor('#4A403A')
+        .fontColor(TEXT_SUB)
         .width('100%')
     }
     .width('100%')
@@ -5167,7 +5167,7 @@ struct Index {
       Row({ space: 10 }) {
         Text(`${i + 1}`)
           .fontSize(11)
-          .fontColor(i < 3 ? settings.accent() : '#5A4A42')
+          .fontColor(i < 3 ? settings.accent() : TEXT_SUB)
           .width(20)
           .textAlign(TextAlign.Center)
         Column({ space: 3 }) {
@@ -5265,7 +5265,7 @@ struct Index {
             .fontColor(TEXT_SUB)
           Text('放几首歌之后这里会按时间倒序出现')
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
             .textAlign(TextAlign.Center)
         }
         .width('100%')
@@ -5310,7 +5310,7 @@ struct Index {
             .fontColor(TEXT_SUB)
           Text('长按任意歌曲，选「收藏」')
             .fontSize(10)
-            .fontColor('#5A4A42')
+            .fontColor(TEXT_SUB)
         }
         .width('100%')
         .layoutWeight(1)
@@ -5412,7 +5412,7 @@ struct Index {
 
       Text('›')
         .fontSize(18)
-        .fontColor('#4D423C')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .padding({ top: 10, bottom: 10, left: 6, right: 6 })
@@ -5462,7 +5462,7 @@ struct Index {
           Column() {
             Text(this.groupInitial())
               .fontSize(28)
-              .fontColor('#4D423C')
+              .fontColor(TEXT_SUB)
           }
           .width(84)
           .height(84)
@@ -5532,13 +5532,13 @@ struct Index {
     Column({ space: 10 }) {
       Text('♫')
         .fontSize(48)
-        .fontColor('#40352F')
+        .fontColor(TEXT_SUB)
       Text('还没有曲库')
         .fontSize(14)
         .fontColor(TEXT_SUB)
       Text('用「导入文件」挑几首歌\n或先用「示例曲库」造几首测试曲')
         .fontSize(11)
-        .fontColor('#6B5D56')
+        .fontColor(TEXT_SUB)
         .textAlign(TextAlign.Center)
         .lineHeight(18)
     }
@@ -5555,7 +5555,7 @@ struct Index {
         .fontColor(TEXT_SUB)
       Text(`曲库里共 ${this.lib.songs.length} 首`)
         .fontSize(10)
-        .fontColor('#5A4A42')
+        .fontColor(TEXT_SUB)
     }
     .width('100%')
     .layoutWeight(1)
@@ -5608,7 +5608,7 @@ struct Index {
           Column({ space: 0 }) {
             Text(`${index + 1}`)
               .fontSize(settings.ui(11))
-              .fontColor(this.isCurrent(song) ? settings.accent() : '#5A4A42')
+              .fontColor(this.isCurrent(song) ? settings.accent() : TEXT_SUB)
           }
           .width(settings.ui(44))
           .height(settings.ui(44))
@@ -5789,11 +5789,11 @@ struct Index {
       Image(icon)
         .width(22)
         .height(22)
-        .fillColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+        .fillColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
         .draggable(false)
       Text(label)
         .fontSize(10)
-        .fontColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+        .fontColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
     }
     .layoutWeight(1)
     .height(52)
@@ -5830,11 +5830,11 @@ struct Index {
       Image(icon)
         .width(24)
         .height(24)
-        .fillColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+        .fillColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
         .draggable(false)
       Text(label)
         .fontSize(10)
-        .fontColor(this.tab === index ? TEXT_MAIN : '#8E8079')
+        .fontColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
     }
     .width('100%')
     .height(60)
@@ -6041,7 +6041,7 @@ struct Index {
               .fontColor('#D6C8C1')
             Text('把同名 .lrc / .yrc 放在歌曲旁边，或在设置里导入')
               .fontSize(10)
-              .fontColor('#8E8079')
+              .fontColor(TEXT_SUB)
               .textAlign(TextAlign.Center)
           }
           .width('100%')
@@ -6251,7 +6251,7 @@ struct Index {
             Row({ space: 10 }) {
               Text(`${index + 1}`)
                 .fontSize(10)
-                .fontColor(song.path === this.player.currentPath ? settings.accent() : '#5A4A42')
+                .fontColor(song.path === this.player.currentPath ? settings.accent() : TEXT_SUB)
                 .width(20)
                 .textAlign(TextAlign.Center)
 
@@ -6654,7 +6654,7 @@ struct Index {
                   Image($r('app.media.ic_note'))
                     .width(48)
                     .height(48)
-                    .fillColor('#8C7C74')
+                    .fillColor(TEXT_SUB)
                     .draggable(false)
                 }
                 .width('100%')
@@ -6850,7 +6850,7 @@ struct Index {
                 Text(line.text)
                   .fontSize(settings.scale(18))
                   .fontWeight(index === this.lyrics.currentIndex ? FontWeight.Medium : FontWeight.Normal)
-                  .fontColor(index === this.lyrics.currentIndex ? '#FFFFFF' : '#8E8079')
+                  .fontColor(index === this.lyrics.currentIndex ? '#FFFFFF' : TEXT_SUB)
                   .textAlign(TextAlign.Center)
                   .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -6895,7 +6895,7 @@ struct Index {
         Column() {
           Text('暂无歌词')
             .fontSize(13)
-            .fontColor('#8E8079')
+            .fontColor(TEXT_SUB)
         }
         .width('100%')
         .layoutWeight(1)
@@ -6970,7 +6970,7 @@ struct Index {
               Image($r('app.media.ic_note'))
                 .width(56)
                 .height(56)
-                .fillColor('#8C7C74')
+                .fillColor(TEXT_SUB)
                 .draggable(false)
             }
             .width('100%')
