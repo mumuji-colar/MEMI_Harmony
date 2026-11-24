@@ -4183,6 +4183,10 @@ struct Index {
     .padding({ top: 8, bottom: 8, left: 2, right: 6 })
     .borderRadius(12)
     .onClick(() => {
+      // MV 自带音轨：先把正在播的歌停掉，两个解码器同时跑既费电又互相盖音
+      if (this.player.isPlaying) {
+        audioPlayer.pause();
+      }
       neteaseMv.open(m);
     })
   }
@@ -4448,6 +4452,20 @@ struct Index {
       colors: [[settings.tintBackdrop(0.18), 0.0], ['#241D1A', 0.4], ['#12100F', 1.0]]
     })
     .transition(this.routeTransition(260, 200))
+  }
+
+  /**
+   * 页面不可见（切后台、锁屏）：停掉 MV 解码。
+   * 音频播放走后台任务，不受影响；视频继续解码只会白烧电。
+   */
+  onPageHide(): void {
+    if (this.mvSt.open) {
+      try {
+        this.videoCtl.pause();
+      } catch (e) {
+        // 还没起播，忽略
+      }
+    }
   }
 
   private closeMv(): void {

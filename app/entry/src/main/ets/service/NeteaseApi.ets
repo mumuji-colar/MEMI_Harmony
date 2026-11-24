@@ -1556,11 +1556,23 @@ export async function fetchMvStream(mvId: number): Promise<NeteaseMvStream> {
   }
   const keys = Object.keys(brs);
   let best = 0;
+  let lowest = 0;
   for (let i = 0; i < keys.length; i++) {
     const n = Number(keys[i]);
-    if (!Number.isNaN(n) && n > best && cleanStr(brs[keys[i]]).length > 0) {
+    if (Number.isNaN(n) || cleanStr(brs[keys[i]]).length === 0) {
+      continue;
+    }
+    if (lowest === 0 || n < lowest) {
+      lowest = n;
+    }
+    if (n <= 1080 && n > best) {
       best = n;
     }
+  }
+  // 优先 1080P 及以下：4K 档在部分机型上会退回软解，功耗高还容易掉帧。
+  // 只有 4K 档时退而取最低档，保证走硬件解码。
+  if (best === 0) {
+    best = lowest;
   }
   if (best > 0) {
     out.url = toHttps(cleanStr(brs[`${best}`]));
