@@ -1432,10 +1432,10 @@ struct Index {
       .borderColor('#18FFFFFF')
       .clip(true)
 
-      this.settingsSectionIntro('音源兜底', '网易云没版权或只给试听时，去 B 站找同名音频')
+      this.settingsSectionIntro('音源兜底（实验）', '网易云完全拿不到地址时的备用方案')
       Column() {
         this.settingsToggleRow('自动换源（B 站）',
-          '按标题、歌手与时长匹配，找不到就保持原样；换源后音质标签会标「B站」',
+          '实验功能：按歌名、歌手与时长去 B 站找同名音频，可能配到翻唱或现场版，默认关闭',
           this.st.autoSource, (on: boolean) => {
             settings.setAutoSource(on);
           })

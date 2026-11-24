@@ -94,8 +94,11 @@ export class SettingsState {
   @Trace uiScale: number = 1.0;
   /** 同名外挂 .lrc/.yrc/.ttml 优先，否则先读音频内嵌标签 */
   @Trace externalLyricFirst: boolean = true;
-  /** 网易云无版权/需要会员时，自动去 B 站找同名音频顶上 */
-  @Trace autoSource: boolean = true;
+  /**
+   * 网易云完全拿不到地址时，去 B 站找同名音频兜底。
+   * 属于实验功能：匹配靠歌名/歌手/时长，可能配到翻唱或现场版，默认关闭。
+   */
+  @Trace autoSource: boolean = false;
 }
 
 export class SettingsService {
@@ -136,7 +139,7 @@ export class SettingsService {
         ? Math.max(0, Math.min(2, Math.floor(rec.motionLevel))) : 0;
       this.state.uiScale = this.clampUi(rec.uiScale);
       this.state.externalLyricFirst = rec.externalLyricFirst !== false;
-      this.state.autoSource = rec.autoSource !== false;
+      this.state.autoSource = rec.autoSource === true;
       Logger.i(`设置已恢复 主题=${ACCENTS[this.state.accentIndex].name} 毛玻璃=${this.state.blur}`);
     } catch (e) {
       const err = e as BusinessError;
@@ -368,7 +371,7 @@ export class SettingsService {
         ? Math.max(0, Math.min(2, Math.floor(rec.motionLevel))) : 0;
       this.state.uiScale = this.clampUi(rec.uiScale);
       this.state.externalLyricFirst = rec.externalLyricFirst !== false;
-      this.state.autoSource = rec.autoSource !== false;
+      this.state.autoSource = rec.autoSource === true;
       await this.save();
       return true;
     } catch (e) {

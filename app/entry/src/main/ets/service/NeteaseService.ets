@@ -10,7 +10,7 @@ import {
   searchSongs,
   searchPlaylists,
   searchAlbums,
-  resolvePlayUrl,
+  resolvePlayUrlWithFallback,
   fetchLyric,
   fetchPlaylistDetail,
   fetchAlbumSongs,
@@ -673,7 +673,8 @@ export class NeteaseService {
       return cached.info;
     }
     try {
-      const info = await resolvePlayUrl(song.remoteId, settings.onlineLevel());
+      // 和安卓端一样从用户档位往下逐级试，而不是只赌一个档位
+      const info = await resolvePlayUrlWithFallback(song.remoteId, settings.onlineLevel());
       // 网易云没地址（版权/会员）或只给试听片段时，按开关去 B 站找同名音源
       if ((!info.ok() || info.freeTrial) && settings.state.autoSource) {
         const bili = await biliSource.resolve(song);
@@ -684,6 +685,7 @@ export class NeteaseService {
           info.level = 'bili';
           info.source = 'bili';
           info.freeTrial = false;
+          info.reason = '';
           info.code = 200;
         }
       }

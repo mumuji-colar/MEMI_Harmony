@@ -88,6 +88,11 @@ interface NsUrlItemJson {
   fee?: number;
   level?: string | null;
   freeTrialInfo?: Object | null;
+  freeTrialPrivilege?: FreeTrialPrivilegeJson | null;
+}
+
+interface FreeTrialPrivilegeJson {
+  cannotListenReason?: number | null;
 }
 
 interface NsUrlRespJson {
@@ -201,6 +206,8 @@ export class NeteasePlayUrl {
   source: string = 'netease';
   /** 服务端只给试听片段（30 秒）时为 true，调用方应当尝试换源 */
   freeTrial: boolean = false;
+  /** 失败原因：'' 正常 / 'permission' 版权或会员受限 / 'login' 需要登录 / 'no-url' 无地址 */
+  reason: string = '';
 
   ok(): boolean {
     return this.url.length > 0;
@@ -217,7 +224,8 @@ export class NeteasePlayUrl {
       return fmt;
     }
     const main = fmt.length > 0 ? `${kbps}k ${fmt}` : `${kbps}k`;
-    return this.source === 'bili' ? `${main} · B站` : main;
+    const tagged = this.source === 'bili' ? `${main} · B站` : main;
+    return this.freeTrial ? `${tagged} · 试听` : tagged;
   }
 }
 
@@ -576,6 +584,18 @@ function parseUrlResponse(text: string): NeteasePlayUrl {
   result.size = d.size !== undefined ? d.size : 0;
   result.level = cleanStr(d.level);
   result.freeTrial = d.freeTrialInfo !== undefined && d.freeTrialInfo !== null;
+  const privilege = d.freeTrialPrivilege;
+  const cannotListen = privilege !== undefined && privilege !== null
+    && privilege.cannotListenReason !== undefined && privilege.cannotListenReason !== null
+    ? privilege.cannotListenReason : 0;
+  const fee = d.fee !== undefined ? d.fee : 0;
+  if (result.url.length === 0) {
+    if (result.code === 301) {
+      result.reason = 'login';
+    } else {
+      result.reason = (result.code === 404 || cannotListen === 1 || fee > 0) ? 'permission' : 'no-url';
+    }
+  }
   const rawUrl = cleanStr(d.url);
   if (rawUrl.length > 0) {
     result.url = toHttps(rawUrl);
@@ -599,7 +619,7 @@ export async function resolvePlayUrl(songId: number, level: string = 'exhigh'): 
     const parsed = parseUrlResponse(text);
     Logger.i(`eapi 播放地址 level=${level} -> code=${parsed.code} ${parsed.qualityLabel()}`);
     // code 200=正常，-110=版权/会员受限，都是明确结论，不用再试明文
-    if (parsed.code === 200 || parsed.code === -110) {
+    if (parsed.code === 200 || parsed.code === -110 || parsed.code === 301) {
       return parsed;
     }
     Logger.w(`eapi 播放地址返回异常 code=${parsed.code}，退回明文接口`);
@@ -608,6 +628,49 @@ export async function resolvePlayUrl(songId: number, level: string = 'exhigh'): 
   }
   const text = await getText(`/api/song/enhance/player/url?ids=[${songId}]&br=320000`);
   return parseUrlResponse(text);
+}
+
+/**
+ * 音质从高到低的降级顺序，与安卓端一致。
+ * 用户选定的档位开始往下试，拿到可用地址就停。
+ */
+const LEVEL_FALLBACK: string[] = ['jymaster', 'sky', 'jyeffect', 'hires', 'lossless',
+  'exhigh', 'higher', 'standard'];
+
+function levelLadder(preferred: string): string[] {
+  const idx = LEVEL_FALLBACK.indexOf(preferred);
+  if (idx < 0) {
+    return [preferred, 'exhigh', 'higher', 'standard'];
+  }
+  return LEVEL_FALLBACK.slice(idx);
+}
+
+/**
+ * 带降级的播放地址解析。
+ *
+ * 服务端对匿名请求的码率策略不稳定：同一首歌 high 档可能只回 128k，
+ * 但换一个档位又能拿到 320k。所以按安卓端的做法逐级往下试，
+ * 试听片段也算失败，继续往低档找完整版。
+ */
+export async function resolvePlayUrlWithFallback(songId: number,
+  preferred: string = 'exhigh'): Promise<NeteasePlayUrl> {
+  const levels = levelLadder(preferred);
+  let last: NeteasePlayUrl = new NeteasePlayUrl();
+  for (let i = 0; i < levels.length; i++) {
+    const info = await resolvePlayUrl(songId, levels[i]);
+    last = info;
+    if (info.ok() && !info.freeTrial) {
+      if (levels[i] !== preferred) {
+        Logger.i(`网易云音质降级 ${preferred} → ${levels[i]} (${info.qualityLabel()})`);
+      }
+      return info;
+    }
+    if (info.reason === 'login') {
+      // 需要登录时换档位也没用，直接交给上层提示
+      return info;
+    }
+  }
+  return last;
 }
 
 /* ───────────────────────── 账号 / 登录 ───────────────────────── */
