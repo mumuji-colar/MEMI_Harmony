@@ -3,6 +3,7 @@ import { Song } from '../model/Song';
 import { Logger } from '../common/Logger';
 import { db } from './Db';
 import { netease } from './NeteaseService';
+import { NeteasePlayUrl } from './NeteaseApi';
 
 /** 播放模式 */
 export enum PlayMode {
@@ -75,7 +76,8 @@ export class PlaybackController {
               audioPlayer.markFailed(song.title, song.path, '需要会员 / 版权受限，无法播放');
               return;
             }
-            audioPlayer.open(info.url, song.title, autoPlay, positionMs, song.path);
+            audioPlayer.open(info.url, song.title, autoPlay, positionMs, song.path,
+              this.streamHeaders(info));
           });
           return true;
         }
@@ -84,6 +86,18 @@ export class PlaybackController {
       }
     }
     return false;
+  }
+
+  /** B 站音源的 CDN 会校验 Referer，不带就 403；网易云的直链不需要 */
+  private streamHeaders(info: NeteasePlayUrl): Record<string, string> | null {
+    if (info.source !== 'bili') {
+      return null;
+    }
+    return {
+      'Referer': 'https://www.bilibili.com/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        + 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    };
   }
 
   /** 顺序 → 随机 → 单曲 循环切换 */
@@ -126,7 +140,7 @@ export class PlaybackController {
         await audioPlayer.markFailed(song.title, song.path, msg);
         return;
       }
-      await audioPlayer.open(info.url, song.title, true, 0, song.path);
+      await audioPlayer.open(info.url, song.title, true, 0, song.path, this.streamHeaders(info));
       song.quality = info.qualityLabel();
       return;
     }

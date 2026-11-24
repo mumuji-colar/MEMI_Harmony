@@ -1,6 +1,7 @@
 import { Song } from '../model/Song';
 import { Logger } from '../common/Logger';
 import { settings } from './SettingsService';
+import { biliSource } from './BiliSourceService';
 import { getCookie } from './NeteaseSession';
 import {
   NeteasePlaylist,
@@ -673,6 +674,19 @@ export class NeteaseService {
     }
     try {
       const info = await resolvePlayUrl(song.remoteId, settings.onlineLevel());
+      // 网易云没地址（版权/会员）或只给试听片段时，按开关去 B 站找同名音源
+      if ((!info.ok() || info.freeTrial) && settings.state.autoSource) {
+        const bili = await biliSource.resolve(song);
+        if (bili !== null && bili.url.length > 0) {
+          info.url = bili.url;
+          info.br = bili.bitrateKbps * 1000;
+          info.type = bili.mimeType.indexOf('flac') >= 0 ? 'flac' : 'm4a';
+          info.level = 'bili';
+          info.source = 'bili';
+          info.freeTrial = false;
+          info.code = 200;
+        }
+      }
       if (info.ok()) {
         const entry = new CachedUrl();
         entry.info = info;

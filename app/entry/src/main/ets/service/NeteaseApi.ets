@@ -87,6 +87,7 @@ interface NsUrlItemJson {
   code?: number;
   fee?: number;
   level?: string | null;
+  freeTrialInfo?: Object | null;
 }
 
 interface NsUrlRespJson {
@@ -196,6 +197,10 @@ export class NeteasePlayUrl {
   code: number = 0;
   /** 音质档位，如 standard / exhigh */
   level: string = '';
+  /** 实际音源：netease / bili。换源后列表与播放页会标出来 */
+  source: string = 'netease';
+  /** 服务端只给试听片段（30 秒）时为 true，调用方应当尝试换源 */
+  freeTrial: boolean = false;
 
   ok(): boolean {
     return this.url.length > 0;
@@ -211,7 +216,8 @@ export class NeteasePlayUrl {
     if (kbps <= 0) {
       return fmt;
     }
-    return fmt.length > 0 ? `${kbps}k ${fmt}` : `${kbps}k`;
+    const main = fmt.length > 0 ? `${kbps}k ${fmt}` : `${kbps}k`;
+    return this.source === 'bili' ? `${main} · B站` : main;
   }
 }
 
@@ -569,6 +575,7 @@ function parseUrlResponse(text: string): NeteasePlayUrl {
   result.type = cleanStr(d.type);
   result.size = d.size !== undefined ? d.size : 0;
   result.level = cleanStr(d.level);
+  result.freeTrial = d.freeTrialInfo !== undefined && d.freeTrialInfo !== null;
   const rawUrl = cleanStr(d.url);
   if (rawUrl.length > 0) {
     result.url = toHttps(rawUrl);

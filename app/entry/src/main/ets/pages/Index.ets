@@ -1432,6 +1432,21 @@ struct Index {
       .borderColor('#18FFFFFF')
       .clip(true)
 
+      this.settingsSectionIntro('音源兜底', '网易云没版权或只给试听时，去 B 站找同名音频')
+      Column() {
+        this.settingsToggleRow('自动换源（B 站）',
+          '按标题、歌手与时长匹配，找不到就保持原样；换源后音质标签会标「B站」',
+          this.st.autoSource, (on: boolean) => {
+            settings.setAutoSource(on);
+          })
+      }
+      .width('100%')
+      .borderRadius(20)
+      .backgroundColor('#0DFFFFFF')
+      .borderWidth(0.5)
+      .borderColor('#18FFFFFF')
+      .clip(true)
+
       this.settingsSectionIntro('默认倍速', '只影响启动时的初始值，播放页随时可改')
       Column({ space: 10 }) {
         Row({ space: 8 }) {

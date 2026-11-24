@@ -52,6 +52,8 @@ interface SettingsRecord {
   uiScale?: number;
   /** 同名外挂歌词优先于内嵌标签 */
   externalLyricFirst?: boolean;
+  /** 网易云拿不到地址时去 B 站找同名音源 */
+  autoSource?: boolean;
 }
 
 @ObservedV2
@@ -92,6 +94,8 @@ export class SettingsState {
   @Trace uiScale: number = 1.0;
   /** 同名外挂 .lrc/.yrc/.ttml 优先，否则先读音频内嵌标签 */
   @Trace externalLyricFirst: boolean = true;
+  /** 网易云无版权/需要会员时，自动去 B 站找同名音频顶上 */
+  @Trace autoSource: boolean = true;
 }
 
 export class SettingsService {
@@ -132,6 +136,7 @@ export class SettingsService {
         ? Math.max(0, Math.min(2, Math.floor(rec.motionLevel))) : 0;
       this.state.uiScale = this.clampUi(rec.uiScale);
       this.state.externalLyricFirst = rec.externalLyricFirst !== false;
+      this.state.autoSource = rec.autoSource !== false;
       Logger.i(`设置已恢复 主题=${ACCENTS[this.state.accentIndex].name} 毛玻璃=${this.state.blur}`);
     } catch (e) {
       const err = e as BusinessError;
@@ -305,6 +310,11 @@ export class SettingsService {
     await this.save();
   }
 
+  async setAutoSource(on: boolean): Promise<void> {
+    this.state.autoSource = on;
+    await this.save();
+  }
+
   /** 备份导出用：把当前设置序列化成一份独立 JSON */
   exportJson(): string {
     const rec: SettingsRecord = {
@@ -324,7 +334,8 @@ export class SettingsService {
       onlineQuality: this.state.onlineQuality,
       motionLevel: this.state.motionLevel,
       uiScale: this.state.uiScale,
-      externalLyricFirst: this.state.externalLyricFirst
+      externalLyricFirst: this.state.externalLyricFirst,
+      autoSource: this.state.autoSource
     };
     return JSON.stringify(rec);
   }
@@ -357,6 +368,7 @@ export class SettingsService {
         ? Math.max(0, Math.min(2, Math.floor(rec.motionLevel))) : 0;
       this.state.uiScale = this.clampUi(rec.uiScale);
       this.state.externalLyricFirst = rec.externalLyricFirst !== false;
+      this.state.autoSource = rec.autoSource !== false;
       await this.save();
       return true;
     } catch (e) {
@@ -453,7 +465,8 @@ export class SettingsService {
       onlineQuality: this.state.onlineQuality,
       motionLevel: this.state.motionLevel,
       uiScale: this.state.uiScale,
-      externalLyricFirst: this.state.externalLyricFirst
+      externalLyricFirst: this.state.externalLyricFirst,
+      autoSource: this.state.autoSource
     };
     try {
       await s.put(KEY_JSON, JSON.stringify(rec));

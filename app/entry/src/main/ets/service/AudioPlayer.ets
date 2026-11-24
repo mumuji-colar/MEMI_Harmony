@@ -74,7 +74,8 @@ export class AudioPlayer {
    *                 因为真实播放地址每次都会变，不能拿它当身份
    */
   async open(source: string, displayName: string, autoPlay: boolean = true,
-    startPositionMs: number = 0, identity: string = ''): Promise<void> {
+    startPositionMs: number = 0, identity: string = '',
+    headers: Record<string, string> | null = null): Promise<void> {
     Logger.i(`open: ${source}`);
     this.state.errorMsg = '';
     this.state.isLoading = true;
@@ -93,8 +94,14 @@ export class AudioPlayer {
       this.bindEvents(p);
 
       if (source.startsWith('http://') || source.startsWith('https://')) {
-        // 网络流：直接赋 url，状态机同样会走到 initialized
-        p.url = source;
+        // 网络流：直接赋 url，状态机同样会走到 initialized。
+        // 有些 CDN（比如 B 站）会校验 Referer，不带就直接 403，所以支持自定义请求头。
+        if (headers !== null) {
+          const src = media.createMediaSourceWithUrl(source, headers);
+          await p.setMediaSource(src);
+        } else {
+          p.url = source;
+        }
         return;
       }
 
