@@ -34,6 +34,7 @@ import { Song } from '../model/Song';
 import { Logger } from '../common/Logger';
 import { formatTime } from '../common/Format';
 import { MochiSwitch, MochiSlider, MochiSegmented, MochiRadius, MochiSpring } from '../common/MochiUI';
+import { MochiSurface } from '../common/MochiShape';
 
 const TEXT_MAIN: string = '#F5EDE8';
 const TEXT_SUB: string = '#A0938B';
@@ -1009,47 +1010,38 @@ struct Index {
       this.settingsAccountCard()
 
       this.settingsSectionIntro('个性化', '主题、播放与歌词都按你的习惯来')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsNavRow('色', '外观与主题', this.appearanceSummary(), 'appearance')
         this.settingsDivider()
         this.settingsNavRow('播', '播放', this.playbackSummary(), 'playback')
         this.settingsDivider()
         this.settingsNavRow('词', '歌词', this.lyricsSummary(), 'lyrics')
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('内容与账号', '曲库、离线下载和网易云')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsNavRow('库', '曲库与下载', this.librarySummary(), 'library')
         this.settingsDivider()
         this.settingsNavRow('云', '网易云', this.onlineSummary(), 'online')
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('数据', '听歌统计、存储占用与备份')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsNavRow('统', '听歌统计', '播放次数、收听时长与最常听', 'stats')
         this.settingsDivider()
         this.settingsNavRow('存', '存储管理', this.storageSummary(), 'storage')
         this.settingsDivider()
         this.settingsNavRow('备', '备份与恢复', '设置、歌单、收藏导出成 JSON', 'backup')
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('关于', '版本与本地统计')
       Column() {
@@ -1346,7 +1338,8 @@ struct Index {
       .padding({ top: 4, bottom: 14, left: 6, right: 6 })
 
       this.settingsSectionIntro('显示', '低端机可以关掉毛玻璃与缩略图')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsToggleRow('毛玻璃效果', '关闭后更省电，低端机更流畅', this.st.blur, (on: boolean) => {
           settings.setBlur(on);
         })
@@ -1356,13 +1349,9 @@ struct Index {
         this.settingsToggleRow('列表缩略图', '从音频里解出封面，关闭可省内存', this.st.showThumbs, (on: boolean) => {
           settings.setShowThumbs(on);
         })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('界面与动效', '缩放影响列表行高与歌词基准字号，不会改左右边距')
       Column() {
@@ -1425,7 +1414,8 @@ struct Index {
   settingsPlaybackPage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('播放行为', '恢复上次进度与启动方式')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsToggleRow('记住播放进度', '下次打开从上次听到的位置继续', this.st.rememberProgress,
           (on: boolean) => {
             settings.setRememberProgress(on);
@@ -1435,28 +1425,21 @@ struct Index {
           this.st.autoResume, (on: boolean) => {
             settings.setAutoResume(on);
           })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('音源兜底（实验）', '网易云完全拿不到地址时的备用方案')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsToggleRow('自动换源（B 站）',
           '实验功能：按歌名、歌手与时长去 B 站找同名音频，可能配到翻唱或现场版，默认关闭',
           this.st.autoSource, (on: boolean) => {
             settings.setAutoSource(on);
           })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('默认倍速', '只影响启动时的初始值，播放页随时可改')
       Column({ space: 10 }) {
@@ -1491,7 +1474,8 @@ struct Index {
   settingsLyricsPage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('歌词排版', '正文字号、翻译字号与译文开关')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.lyricBodySlider()
 
         this.settingsDivider()
@@ -1502,16 +1486,13 @@ struct Index {
           (on: boolean) => {
             settings.setShowTranslation(on);
           })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('外部歌词', '同名 .lrc / .yrc / .ttml 与手动导入')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsToggleRow('外部歌词优先', '关闭后先读音频内嵌标签，再退回同名歌词文件',
           this.st.externalLyricFirst, (on: boolean) => {
             settings.setExternalLyricFirst(on);
@@ -1526,13 +1507,9 @@ struct Index {
             this.removeLyricFile();
           })
         }
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       Text('导入的歌词存在应用沙箱里，卸载应用会一起清掉')
         .fontSize(9)
@@ -1780,16 +1757,12 @@ struct Index {
       .borderColor('#18FFFFFF')
       .clip(true)
 
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsNavRow('私', '隐私政策', '看我们处理哪些数据、存在哪里', 'privacy')
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
-      .margin({ top: 10 })
 
       Text('内容来自网易云音乐公开接口，仅用于个人试听。')
         .fontSize(9)
@@ -1808,7 +1781,8 @@ struct Index {
   settingsStoragePage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('占用', '只统计应用沙箱，用户目录里的音频不计入')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsInfoRow('下载的歌曲', formatBytes(this.storageState.downloads))
         this.settingsDividerPlain()
         this.settingsInfoRow('导入的歌词', formatBytes(this.storageState.lyrics))
@@ -1818,14 +1792,9 @@ struct Index {
         this.settingsInfoRow('缓存', formatBytes(this.storageState.cache))
         this.settingsDividerPlain()
         this.settingsInfoRow('合计', this.storageState.scanning ? '统计中…' : formatBytes(this.storageState.total()))
+        }
+        .width('100%')
       }
-      .width('100%')
-      .padding({ left: 14, right: 14, top: 6, bottom: 6 })
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('操作', '缓存可以随时清，歌曲和歌词不会动')
       Column() {
@@ -1862,32 +1831,26 @@ struct Index {
   settingsBackupPage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('导出', '设置、自建歌单、收藏写成一份 JSON')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsActionRow('导出备份文件',
           this.backupBusy ? '正在处理…' : '自己选保存位置，文件名带日期', false, () => {
             this.exportBackup();
           })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       this.settingsSectionIntro('恢复', '同 id 的歌单会被覆盖，收藏按路径累加')
-      Column() {
+      MochiSurface({ radius: 20 }) {
+        Column() {
         this.settingsActionRow('从备份文件恢复',
           this.backupBusy ? '正在处理…' : '选择之前导出的 .json', false, () => {
             this.confirmImportBackup();
           })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       if (this.backupMsg.length > 0) {
         Text(this.backupMsg)
