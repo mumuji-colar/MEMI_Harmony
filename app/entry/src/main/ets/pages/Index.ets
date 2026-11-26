@@ -33,6 +33,7 @@ import { LyricLine } from '../model/LyricLine';
 import { Song } from '../model/Song';
 import { Logger } from '../common/Logger';
 import { formatTime } from '../common/Format';
+import { MochiSwitch, MochiSlider, MochiSegmented, MochiRadius, MochiSpring } from '../common/MochiUI';
 
 const TEXT_MAIN: string = '#F5EDE8';
 const TEXT_SUB: string = '#A0938B';
@@ -66,6 +67,8 @@ struct Index {
   @Local lastLoopMode: number = PlayMode.SEQUENCE;
   /** 页签切换：淡入 + 水平轻推，方向跟着页签顺序 */
   @Local tabFade: number = 1;
+  /** 页签栏实测宽度，用来算 mochi 选中块的位移 */
+  @Local tabBarWidth: number = 0;
   @Local tabShiftX: number = 0;
   /** 设置子页进出：横向推入 */
   @Local settingsFade: number = 1;
@@ -1249,12 +1252,12 @@ struct Index {
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
 
-      Toggle({ type: ToggleType.Switch, isOn: isOn })
-        .selectedColor(settings.accent())
-        .switchPointColor('#FFF6F0')
-        .onChange((on: boolean) => {
+      MochiSwitch({
+        isOn: isOn,
+        onToggle: (on: boolean) => {
           onChange(on);
-        })
+        }
+      })
     }
     .width('100%')
     .padding({ top: 12, bottom: 12, left: 14, right: 14 })
@@ -1363,28 +1366,36 @@ struct Index {
 
       this.settingsSectionIntro('界面与动效', '缩放影响列表行高与歌词基准字号，不会改左右边距')
       Column() {
-        Row({ space: 6 }) {
+        Column({ space: 10 }) {
           Text('界面缩放')
             .fontSize(14)
             .fontColor(TEXT_MAIN)
-            .layoutWeight(1)
-          this.uiScaleChip('紧凑', 0.9)
-          this.uiScaleChip('标准', 1.0)
-          this.uiScaleChip('宽松', 1.1)
+            .width('100%')
+          MochiSegmented({
+            items: ['紧凑', '标准', '宽松'],
+            index: this.st.uiScale <= 0.95 ? 0 : (this.st.uiScale >= 1.05 ? 2 : 1),
+            onSelect: (i: number) => {
+              settings.setUiScale(i === 0 ? 0.9 : (i === 2 ? 1.1 : 1.0));
+            }
+          })
         }
         .width('100%')
         .padding({ top: 12, bottom: 12, left: 14, right: 14 })
 
         this.settingsDivider()
 
-        Row({ space: 6 }) {
+        Column({ space: 10 }) {
           Text('动效')
             .fontSize(14)
             .fontColor(TEXT_MAIN)
-            .layoutWeight(1)
-          this.motionChip('完整', 0)
-          this.motionChip('精简', 1)
-          this.motionChip('关闭', 2)
+            .width('100%')
+          MochiSegmented({
+            items: ['完整', '精简', '关闭'],
+            index: Math.max(0, Math.min(2, this.st.motionLevel)),
+            onSelect: (i: number) => {
+              settings.setMotionLevel(i);
+            }
+          })
         }
         .width('100%')
         .padding({ top: 12, bottom: 12, left: 14, right: 14 })
@@ -1449,11 +1460,13 @@ struct Index {
 
       this.settingsSectionIntro('默认倍速', '只影响启动时的初始值，播放页随时可改')
       Column({ space: 10 }) {
-        Row({ space: 8 }) {
-          ForEach(SPEED_OPTIONS, (v: number) => {
-            this.speedChip(v)
-          }, (v: number) => `${v}`)
-        }
+        MochiSegmented({
+          items: ['0.5x', '1x', '1.25x', '1.5x', '2x'],
+          index: Math.max(0, SPEED_OPTIONS.indexOf(this.st.defaultSpeed)),
+          onSelect: (i: number) => {
+            settings.setDefaultSpeed(SPEED_OPTIONS[i]);
+          }
+        })
         .width('100%')
 
         Text('启动时生效')
@@ -1702,12 +1715,13 @@ struct Index {
         }
         .width('100%')
 
-        Row({ space: 6 }) {
-          this.qualityChip('标准', 0)
-          this.qualityChip('高', 1)
-          this.qualityChip('无损', 2)
-          this.qualityChip('Hi-Res', 3)
-        }
+        MochiSegmented({
+          items: ['标准', '高', '无损', 'Hi-Res'],
+          index: Math.max(0, Math.min(3, this.st.onlineQuality)),
+          onSelect: (i: number) => {
+            settings.setOnlineQuality(i);
+          }
+        })
         .width('100%')
 
         Text('非会员选择无损会自动降档到 320k')
@@ -2201,24 +2215,17 @@ struct Index {
       }
       .width('100%')
 
-      Slider({
+      MochiSlider({
         value: this.st.chromeGlass,
         min: 0,
         max: 100,
-        step: 5
-      })
-        .blockColor(settings.accent())
-        .trackColor('#33FFFFFF')
-        .selectedColor(settings.accent())
-        .trackThickness(3)
-        .blockSize({ width: 14, height: 14 })
-        .width('100%')
-        .onChange((v: number, mode: SliderChangeMode) => {
+        onChange: (v: number) => {
           settings.state.chromeGlass = v;
-          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
-            settings.setChromeGlass(v);
-          }
-        })
+        },
+        onChangeEnd: (v: number) => {
+          settings.setChromeGlass(Math.round(v / 5) * 5);
+        }
+      })
     }
     .width('100%')
     .padding({ top: 12, bottom: 10, left: 14, right: 14 })
@@ -2239,24 +2246,17 @@ struct Index {
       }
       .width('100%')
 
-      Slider({
+      MochiSlider({
         value: this.st.lyricScale,
         min: 0.7,
         max: 2.0,
-        step: 0.05
-      })
-        .blockColor(settings.accent())
-        .trackColor('#33FFFFFF')
-        .selectedColor(settings.accent())
-        .trackThickness(3)
-        .blockSize({ width: 14, height: 14 })
-        .width('100%')
-        .onChange((v: number, mode: SliderChangeMode) => {
+        onChange: (v: number) => {
           settings.state.lyricScale = v;
-          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
-            settings.setLyricScale(v);
-          }
-        })
+        },
+        onChangeEnd: (v: number) => {
+          settings.setLyricScale(Math.round(v * 20) / 20);
+        }
+      })
     }
     .width('100%')
     .padding({ top: 12, bottom: 10, left: 14, right: 14 })
@@ -2277,24 +2277,17 @@ struct Index {
       }
       .width('100%')
 
-      Slider({
+      MochiSlider({
         value: this.st.transScale,
         min: 0.7,
         max: 2.0,
-        step: 0.05
-      })
-        .blockColor(settings.accent())
-        .trackColor('#33FFFFFF')
-        .selectedColor(settings.accent())
-        .trackThickness(3)
-        .blockSize({ width: 14, height: 14 })
-        .width('100%')
-        .onChange((v: number, mode: SliderChangeMode) => {
+        onChange: (v: number) => {
           settings.state.transScale = v;
-          if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
-            settings.setTransScale(v);
-          }
-        })
+        },
+        onChangeEnd: (v: number) => {
+          settings.setTransScale(Math.round(v * 20) / 20);
+        }
+      })
     }
     .width('100%')
     .padding({ top: 12, bottom: 10, left: 14, right: 14 })
@@ -2671,16 +2664,18 @@ struct Index {
       Text(label)
         .fontSize(13)
         .fontWeight(this.libSection === section ? FontWeight.Medium : FontWeight.Normal)
-        .fontColor(this.libSection === section ? '#1E1A18' : TEXT_MAIN)
+        .fontColor(this.libSection === section ? settings.accent() : TEXT_MAIN)
       Text(count)
         .fontSize(10)
-        .fontColor(this.libSection === section ? '#1E1A18' : TEXT_SUB)
+        .fontColor(this.libSection === section ? settings.accent() : TEXT_SUB)
     }
     .layoutWeight(1)
     .height(42)
     .justifyContent(FlexAlign.Center)
     .borderRadius(21)
-    .backgroundColor(this.libSection === section ? settings.accent() : '#1FFFFFFF')
+    .backgroundColor(this.libSection === section ? settings.accentSoft(0.22) : '#1FFFFFFF')
+    .borderWidth(1)
+    .borderColor(this.libSection === section ? settings.accentSoft(0.36) : '#00000000')
     .onClick(() => {
       if (this.libSection === section) {
         this.libSection = 0;
@@ -2726,13 +2721,15 @@ struct Index {
   favChip(label: string, tab: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.favTab === tab ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.favTab === tab ? settings.accent() : TEXT_SUB)
       .fontWeight(this.favTab === tab ? FontWeight.Medium : FontWeight.Normal)
       .textAlign(TextAlign.Center)
       .height(30)
       .padding({ left: 12, right: 12 })
       .borderRadius(15)
-      .backgroundColor(this.favTab === tab ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.favTab === tab ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.favTab === tab ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         this.favTab = tab;
         this.favGroupKey = '';
@@ -2743,13 +2740,15 @@ struct Index {
   dlChip(label: string, tab: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.dlTab === tab ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.dlTab === tab ? settings.accent() : TEXT_SUB)
       .fontWeight(this.dlTab === tab ? FontWeight.Medium : FontWeight.Normal)
       .textAlign(TextAlign.Center)
       .height(30)
       .padding({ left: 12, right: 12 })
       .borderRadius(15)
-      .backgroundColor(this.dlTab === tab ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.dlTab === tab ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.dlTab === tab ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         this.dlTab = tab;
       })
@@ -2759,13 +2758,15 @@ struct Index {
   segmentChip(label: string, mode: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.viewMode === mode ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.viewMode === mode ? settings.accent() : TEXT_SUB)
       .fontWeight(this.viewMode === mode ? FontWeight.Medium : FontWeight.Normal)
       .textAlign(TextAlign.Center)
       .height(30)
       .padding({ left: 7, right: 7 })
       .borderRadius(16)
-      .backgroundColor(this.viewMode === mode ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.viewMode === mode ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.viewMode === mode ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         this.viewMode = mode;
         this.groupKey = '';
@@ -2946,11 +2947,15 @@ struct Index {
 
   @Builder
   onlineTabRow() {
-    Row({ space: 6 }) {
-      this.onlineTabChip('单曲', 0)
-      this.onlineTabChip('歌单', 1)
-      this.onlineTabChip('专辑', 2)
-      Blank()
+    Row({ space: 10 }) {
+      MochiSegmented({
+        items: ['单曲', '歌单', '专辑'],
+        index: this.online.tab,
+        onSelect: (i: number) => {
+          this.online.tab = i;
+        }
+      })
+        .layoutWeight(1)
       if (this.online.searching) {
         LoadingProgress()
           .width(16)
@@ -2966,12 +2971,14 @@ struct Index {
   onlineTabChip(label: string, tab: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.online.tab === tab ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.online.tab === tab ? settings.accent() : TEXT_SUB)
       .height(28)
       .padding({ left: 14, right: 14 })
       .borderRadius(14)
       .textAlign(TextAlign.Center)
-      .backgroundColor(this.online.tab === tab ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.online.tab === tab ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.online.tab === tab ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         netease.setTab(tab);
       })
@@ -3917,12 +3924,14 @@ struct Index {
   artistTabChip(label: string, tab: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.artistSt.tab === tab ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.artistSt.tab === tab ? settings.accent() : TEXT_SUB)
       .height(30)
       .layoutWeight(1)
       .borderRadius(15)
       .textAlign(TextAlign.Center)
-      .backgroundColor(this.artistSt.tab === tab ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.artistSt.tab === tab ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.artistSt.tab === tab ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         neteaseArtist.setTab(tab);
       })
@@ -4212,12 +4221,14 @@ struct Index {
   commentSortChip(label: string, sort: number) {
     Text(label)
       .fontSize(11)
-      .fontColor(this.commentSt.sort === sort ? '#1E1A18' : TEXT_SUB)
+      .fontColor(this.commentSt.sort === sort ? settings.accent() : TEXT_SUB)
       .height(28)
       .padding({ left: 16, right: 16 })
       .borderRadius(14)
       .textAlign(TextAlign.Center)
-      .backgroundColor(this.commentSt.sort === sort ? settings.accent() : '#14FFFFFF')
+      .backgroundColor(this.commentSt.sort === sort ? settings.accentSoft(0.22) : '#14FFFFFF')
+      .borderWidth(1)
+      .borderColor(this.commentSt.sort === sort ? settings.accentSoft(0.36) : '#00000000')
       .onClick(() => {
         neteaseComment.setSort(sort);
       })
@@ -5796,24 +5807,41 @@ struct Index {
     })
   }
 
-  /** 底部胶囊页签栏 */
+  /** 底部页签栏：mochi 的胶囊 + 整块滑动的选中底 */
   @Builder
   tabBar() {
-    Row() {
-      this.tabItem('首页', 0, $r('app.media.ic_tab_home'))
-      this.tabItem('探索', 1, $r('app.media.ic_tab_search'))
-      this.tabItem('媒体库', 2, $r('app.media.ic_tab_library'))
-      this.tabItem('设置', 3, $r('app.media.ic_tab_settings'))
+    Stack({ alignContent: Alignment.TopStart }) {
+      if (this.tabBarWidth > 0) {
+        Row()
+          .width((this.tabBarWidth - 12) / 4)
+          .height(52)
+          .borderRadius(26)
+          .backgroundColor(settings.accentSoft(0.18))
+          .translate({ x: 6 + this.tab * ((this.tabBarWidth - 12) / 4), y: 6 })
+          .animation({ curve: MochiSpring.snappy(), duration: 420 })
+      }
+
+      Row() {
+        this.tabItem('首页', 0, $r('app.media.ic_tab_home'))
+        this.tabItem('探索', 1, $r('app.media.ic_tab_search'))
+        this.tabItem('媒体库', 2, $r('app.media.ic_tab_library'))
+        this.tabItem('设置', 3, $r('app.media.ic_tab_settings'))
+      }
+      .width('100%')
+      .height(64)
+      .padding({ left: 6, right: 6, top: 6, bottom: 6 })
     }
     .width('100%')
     .height(64)
-    .padding({ left: 6, right: 6 })
-    .borderRadius(26)
+    .borderRadius(32)
     .backgroundColor(this.chromeBg())
     .backdropBlur(this.st.chromeGlass / 100 * 30)
     .borderWidth(1)
     .borderColor('#26FFFFFF')
     .shadow({ radius: 20, color: '#66000000', offsetX: 0, offsetY: 8 })
+    .onAreaChange((oldValue: Area, newValue: Area) => {
+      this.tabBarWidth = Number(newValue.width);
+    })
   }
 
   @Builder
@@ -5822,17 +5850,16 @@ struct Index {
       Image(icon)
         .width(22)
         .height(22)
-        .fillColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
+        .fillColor(this.tab === index ? settings.accent() : TEXT_SUB)
         .draggable(false)
       Text(label)
         .fontSize(10)
-        .fontColor(this.tab === index ? TEXT_MAIN : TEXT_SUB)
+        .fontWeight(this.tab === index ? FontWeight.Medium : FontWeight.Normal)
+        .fontColor(this.tab === index ? settings.accent() : TEXT_SUB)
     }
     .layoutWeight(1)
     .height(52)
     .justifyContent(FlexAlign.Center)
-    .borderRadius(22)
-    .backgroundColor(this.tab === index ? '#22FFFFFF' : '#00000000')
     .onClick(() => {
       this.jumpTab(index);
     })
