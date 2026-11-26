@@ -113,6 +113,11 @@ export struct MochiSurface {
   @Param fillColor: string = '#0DFFFFFF';
   @Param strokeColor: string = '#18FFFFFF';
   @Param strokeWidth: number = 1;
+  /** 容器宽度百分比。弹窗要留边距，所以不能固定 100 */
+  @Param widthPercent: number = 100;
+  /** 背景模糊强度，0 表示不模糊。页签栏和迷你播放器要靠它透出下面的封面。
+   *  不能叫 blur：会和通用属性 .blur() 冲突，编译期直接报类型不兼容 */
+  @Param backdrop: number = 0;
   @BuilderParam content: () => void;
 
   @Local w: number = 0;
@@ -135,12 +140,22 @@ export struct MochiSurface {
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       if (this.cmd.length > 0) {
+        if (this.backdrop > 0) {
+          // 底色和模糊放在同一个被裁切的节点上，圆角外不会漏出方形模糊边
+          Column()
+            .width(this.w)
+            .height(this.h)
+            .backgroundColor(this.fillColor)
+            .backdropBlur(this.backdrop)
+            .clipShape(new PathShape({ commands: this.cmd }))
+        }
+
         Shape() {
           Path().commands(this.cmd)
         }
         .width(this.w)
         .height(this.h)
-        .fill(this.fillColor)
+        .fill(this.backdrop > 0 ? Color.Transparent : this.fillColor)
         .stroke(this.strokeColor)
         .strokeWidth(this.strokeWidth)
         .antiAlias(true)
@@ -152,7 +167,7 @@ export struct MochiSurface {
       .width('100%')
       .clipShape(new PathShape({ commands: this.cmd }))
     }
-    .width('100%')
+    .width(`${this.widthPercent}%`)
     .onAreaChange((oldValue: Area, newValue: Area) => {
       this.refresh(Number(newValue.width), Number(newValue.height));
     })

@@ -39,3 +39,6 @@ signing/
 # ── 内部开发文档（不随仓库公开） ──────
 HANDOVER.md
 PARITY.md
+
+# 一次性改造脚本，不进仓库
+.tools/

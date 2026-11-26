@@ -1044,15 +1044,12 @@ struct Index {
       }
 
       this.settingsSectionIntro('关于', '版本与本地统计')
-      Column() {
-        this.settingsNavRow('i', '关于 MEMI 輕音', `${this.appVer} · 曲库 ${this.lib.songs.length} 首`, 'about')
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          this.settingsNavRow('i', '关于 MEMI 輕音', `${this.appVer} · 曲库 ${this.lib.songs.length} 首`, 'about')
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       Text('MEMI 輕音 · 本地优先的音乐播放器')
         .fontSize(9)
@@ -1066,60 +1063,58 @@ struct Index {
 
   @Builder
   settingsAccountCard() {
-    Row({ space: 12 }) {
-      if (this.auth.loggedIn && this.auth.avatarUrl.length > 0) {
-        Image(this.auth.avatarUrl)
-          .width(42)
-          .height(42)
-          .borderRadius(21)
-          .objectFit(ImageFit.Cover)
-          .draggable(false)
-      } else {
-        Text('♪')
-          .fontSize(16)
-          .fontColor(TEXT_SUB)
-          .width(42)
-          .height(42)
-          .borderRadius(21)
-          .textAlign(TextAlign.Center)
-          .backgroundColor('#14FFFFFF')
-      }
-      Column({ space: 3 }) {
-        Text(this.auth.loggedIn ? this.auth.nickname : '未登录')
-          .fontSize(14)
-          .fontColor(TEXT_MAIN)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-        Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
-          .fontSize(10)
-          .fontColor(TEXT_SUB)
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .width('100%')
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
+    MochiSurface({ radius: 20 }) {
+      Row({ space: 12 }) {
+        if (this.auth.loggedIn && this.auth.avatarUrl.length > 0) {
+          Image(this.auth.avatarUrl)
+            .width(42)
+            .height(42)
+            .borderRadius(21)
+            .objectFit(ImageFit.Cover)
+            .draggable(false)
+        } else {
+          Text('♪')
+            .fontSize(16)
+            .fontColor(TEXT_SUB)
+            .width(42)
+            .height(42)
+            .borderRadius(21)
+            .textAlign(TextAlign.Center)
+            .backgroundColor('#14FFFFFF')
+        }
+        Column({ space: 3 }) {
+          Text(this.auth.loggedIn ? this.auth.nickname : '未登录')
+            .fontSize(14)
+            .fontColor(TEXT_MAIN)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+          Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
+            .fontSize(10)
+            .fontColor(TEXT_SUB)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+        }
+        .layoutWeight(1)
+        .alignItems(HorizontalAlign.Start)
 
-      Text(this.auth.loggedIn ? '管理' : '登录')
-        .fontSize(10)
-        .fontColor('#241C18')
-        .height(26)
-        .padding({ left: 14, right: 14 })
-        .borderRadius(13)
-        .textAlign(TextAlign.Center)
-        .backgroundColor(settings.accent())
+        Text(this.auth.loggedIn ? '管理' : '登录')
+          .fontSize(10)
+          .fontColor('#241C18')
+          .height(26)
+          .padding({ left: 14, right: 14 })
+          .borderRadius(13)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(settings.accent())
+      }
+      .width('100%')
+      .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+      .margin({ top: 2, bottom: 2 })
+      .onClick(() => {
+        this.settingsPage = 'online';
+      })
     }
-    .width('100%')
-    .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-    .margin({ top: 2, bottom: 2 })
-    .borderRadius(20)
-    .backgroundColor('#0DFFFFFF')
-    .borderWidth(0.5)
-    .borderColor('#18FFFFFF')
-    .onClick(() => {
-      this.settingsPage = 'online';
-    })
   }
 
   @Builder
@@ -1354,55 +1349,52 @@ struct Index {
       }
 
       this.settingsSectionIntro('界面与动效', '缩放影响列表行高与歌词基准字号，不会改左右边距')
-      Column() {
-        Column({ space: 10 }) {
-          Text('界面缩放')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-            .width('100%')
-          MochiSegmented({
-            items: ['紧凑', '标准', '宽松'],
-            index: this.st.uiScale <= 0.95 ? 0 : (this.st.uiScale >= 1.05 ? 2 : 1),
-            onSelect: (i: number) => {
-              settings.setUiScale(i === 0 ? 0.9 : (i === 2 ? 1.1 : 1.0));
-            }
-          })
-        }
-        .width('100%')
-        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-
-        this.settingsDivider()
-
-        Column({ space: 10 }) {
-          Text('动效')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-            .width('100%')
-          MochiSegmented({
-            items: ['完整', '精简', '关闭'],
-            index: Math.max(0, Math.min(2, this.st.motionLevel)),
-            onSelect: (i: number) => {
-              settings.setMotionLevel(i);
-            }
-          })
-        }
-        .width('100%')
-        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-
-        this.settingsDivider()
-
-        Text('关闭动效后，转场与唱片旋转会立刻完成；省电模式下手感更接近本地播放器')
-          .fontSize(9)
-          .fontColor(TEXT_SUB)
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          Column({ space: 10 }) {
+            Text('界面缩放')
+              .fontSize(14)
+              .fontColor(TEXT_MAIN)
+              .width('100%')
+            MochiSegmented({
+              items: ['紧凑', '标准', '宽松'],
+              index: this.st.uiScale <= 0.95 ? 0 : (this.st.uiScale >= 1.05 ? 2 : 1),
+              onSelect: (i: number) => {
+                settings.setUiScale(i === 0 ? 0.9 : (i === 2 ? 1.1 : 1.0));
+              }
+            })
+          }
           .width('100%')
-          .padding({ left: 14, right: 14, bottom: 12 })
+          .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+
+          this.settingsDivider()
+
+          Column({ space: 10 }) {
+            Text('动效')
+              .fontSize(14)
+              .fontColor(TEXT_MAIN)
+              .width('100%')
+            MochiSegmented({
+              items: ['完整', '精简', '关闭'],
+              index: Math.max(0, Math.min(2, this.st.motionLevel)),
+              onSelect: (i: number) => {
+                settings.setMotionLevel(i);
+              }
+            })
+          }
+          .width('100%')
+          .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+
+          this.settingsDivider()
+
+          Text('关闭动效后，转场与唱片旋转会立刻完成；省电模式下手感更接近本地播放器')
+            .fontSize(9)
+            .fontColor(TEXT_SUB)
+            .width('100%')
+            .padding({ left: 14, right: 14, bottom: 12 })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
     }
     .width('100%')
     .height('100%')
@@ -1442,27 +1434,25 @@ struct Index {
       }
 
       this.settingsSectionIntro('默认倍速', '只影响启动时的初始值，播放页随时可改')
-      Column({ space: 10 }) {
-        MochiSegmented({
-          items: ['0.5x', '1x', '1.25x', '1.5x', '2x'],
-          index: Math.max(0, SPEED_OPTIONS.indexOf(this.st.defaultSpeed)),
-          onSelect: (i: number) => {
-            settings.setDefaultSpeed(SPEED_OPTIONS[i]);
-          }
-        })
-        .width('100%')
-
-        Text('启动时生效')
-          .fontSize(9)
-          .fontColor(TEXT_SUB)
+      MochiSurface({ radius: 20 }) {
+        Column({ space: 10 }) {
+          MochiSegmented({
+            items: ['0.5x', '1x', '1.25x', '1.5x', '2x'],
+            index: Math.max(0, SPEED_OPTIONS.indexOf(this.st.defaultSpeed)),
+            onSelect: (i: number) => {
+              settings.setDefaultSpeed(SPEED_OPTIONS[i]);
+            }
+          })
           .width('100%')
+
+          Text('启动时生效')
+            .fontSize(9)
+            .fontColor(TEXT_SUB)
+            .width('100%')
+        }
+        .width('100%')
+        .padding(14)
       }
-      .width('100%')
-      .padding(14)
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
     }
     .width('100%')
     .height('100%')
@@ -1542,77 +1532,71 @@ struct Index {
   settingsLibraryPage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('曲库', '排序方式与导入过滤')
-      Column() {
-        Row({ space: 6 }) {
-          Text('默认排序')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-            .layoutWeight(1)
-          this.sortModeChip('标题', 0)
-          this.sortModeChip('艺术家', 1)
-          this.sortModeChip('时长', 2)
-        }
-        .width('100%')
-        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-
-        this.settingsDivider()
-        this.settingsToggleRow('忽略短音频', '导入时跳过短于 30 秒的文件（提示音、铃声）',
-          this.st.skipShort, (on: boolean) => {
-            settings.setSkipShort(on);
-          })
-      }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
-
-      this.settingsSectionIntro('存储与下载', '离线文件保存在应用沙箱')
-      Column() {
-        Row({ space: 12 }) {
-          Text('下')
-            .fontSize(13)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(settings.accent())
-            .width(30)
-            .height(30)
-            .borderRadius(9)
-            .textAlign(TextAlign.Center)
-            .backgroundColor(settings.accentSoft(0.12))
-          Column({ space: 2 }) {
-            Text('下载管理')
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          Row({ space: 6 }) {
+            Text('默认排序')
               .fontSize(14)
               .fontColor(TEXT_MAIN)
-              .width('100%')
-            Text(`${this.dl.doneSongs.length} 首 · ${formatBytes(this.dl.totalBytes)}`)
-              .fontSize(10)
-              .fontColor(TEXT_SUB)
-              .width('100%')
+              .layoutWeight(1)
+            this.sortModeChip('标题', 0)
+            this.sortModeChip('艺术家', 1)
+            this.sortModeChip('时长', 2)
           }
-          .layoutWeight(1)
-          .alignItems(HorizontalAlign.Start)
-          Text('›')
-            .fontSize(18)
-            .fontColor(TEXT_SUB)
+          .width('100%')
+          .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+
+          this.settingsDivider()
+          this.settingsToggleRow('忽略短音频', '导入时跳过短于 30 秒的文件（提示音、铃声）',
+            this.st.skipShort, (on: boolean) => {
+              settings.setSkipShort(on);
+            })
         }
         .width('100%')
-        .height(58)
-        .padding({ left: 14, right: 14 })
-        .onClick(() => {
-          this.settingsPage = '';
-          this.tab = 2;
-          this.libSection = 2;
-          this.dlTab = 0;
-          this.onModeChanged(8);
-        })
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
+
+      this.settingsSectionIntro('存储与下载', '离线文件保存在应用沙箱')
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          Row({ space: 12 }) {
+            Text('下')
+              .fontSize(13)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(settings.accent())
+              .width(30)
+              .height(30)
+              .borderRadius(9)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(settings.accentSoft(0.12))
+            Column({ space: 2 }) {
+              Text('下载管理')
+                .fontSize(14)
+                .fontColor(TEXT_MAIN)
+                .width('100%')
+              Text(`${this.dl.doneSongs.length} 首 · ${formatBytes(this.dl.totalBytes)}`)
+                .fontSize(10)
+                .fontColor(TEXT_SUB)
+                .width('100%')
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
+            Text('›')
+              .fontSize(18)
+              .fontColor(TEXT_SUB)
+          }
+          .width('100%')
+          .height(58)
+          .padding({ left: 14, right: 14 })
+          .onClick(() => {
+            this.settingsPage = '';
+            this.tab = 2;
+            this.libSection = 2;
+            this.dlTab = 0;
+            this.onModeChanged(8);
+          })
+        }
+        .width('100%')
+      }
     }
     .width('100%')
     .height('100%')
@@ -1624,94 +1608,90 @@ struct Index {
   settingsOnlinePage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('账号', '登录后可播放会员曲目、解锁更高音质')
-      Row({ space: 12 }) {
-        if (this.auth.loggedIn && this.auth.avatarUrl.length > 0) {
-          Image(this.auth.avatarUrl)
-            .width(42)
-            .height(42)
-            .borderRadius(21)
-            .objectFit(ImageFit.Cover)
-            .draggable(false)
-        } else {
-          Image($r('app.media.ic_note'))
-            .width(18)
-            .height(18)
-            .fillColor(TEXT_SUB)
-            .margin(12)
-        }
-        Column({ space: 3 }) {
-          Text(this.auth.loggedIn ? this.auth.nickname : '未登录')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-          Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
-            .fontSize(10)
-            .fontColor(TEXT_SUB)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
+      MochiSurface({ radius: 20 }) {
+        Row({ space: 12 }) {
+          if (this.auth.loggedIn && this.auth.avatarUrl.length > 0) {
+            Image(this.auth.avatarUrl)
+              .width(42)
+              .height(42)
+              .borderRadius(21)
+              .objectFit(ImageFit.Cover)
+              .draggable(false)
+          } else {
+            Image($r('app.media.ic_note'))
+              .width(18)
+              .height(18)
+              .fillColor(TEXT_SUB)
+              .margin(12)
+          }
+          Column({ space: 3 }) {
+            Text(this.auth.loggedIn ? this.auth.nickname : '未登录')
+              .fontSize(14)
+              .fontColor(TEXT_MAIN)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+            Text(this.auth.loggedIn ? this.auth.vipLabel() : '登录后可播会员曲目、解锁更高音质')
+              .fontSize(10)
+              .fontColor(TEXT_SUB)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
 
-        Text(this.auth.loggedIn ? '退出' : '登录')
-          .fontSize(10)
-          .fontColor(this.auth.loggedIn ? '#FF6B6B' : '#241C18')
-          .height(28)
-          .padding({ left: 16, right: 16 })
-          .borderRadius(14)
-          .textAlign(TextAlign.Center)
-          .backgroundColor(this.auth.loggedIn ? '#1AFF6B6B' : settings.accent())
-          .onClick(() => {
-            if (this.auth.loggedIn) {
-              this.confirmLogout();
-            } else {
-              this.openLogin();
-            }
-          })
+          Text(this.auth.loggedIn ? '退出' : '登录')
+            .fontSize(10)
+            .fontColor(this.auth.loggedIn ? '#FF6B6B' : '#241C18')
+            .height(28)
+            .padding({ left: 16, right: 16 })
+            .borderRadius(14)
+            .textAlign(TextAlign.Center)
+            .backgroundColor(this.auth.loggedIn ? '#1AFF6B6B' : settings.accent())
+            .onClick(() => {
+              if (this.auth.loggedIn) {
+                this.confirmLogout();
+              } else {
+                this.openLogin();
+              }
+            })
+        }
+        .width('100%')
+        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
       }
-      .width('100%')
-      .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
 
       this.settingsSectionIntro('音质', '实际码率由账号权限决定')
-      Column({ space: 8 }) {
-        Row() {
-          Text('在线音质')
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-          Blank()
-          Text(settings.onlineQualityLabel())
-            .fontSize(11)
-            .fontColor(settings.accent())
+      MochiSurface({ radius: 20 }) {
+        Column({ space: 8 }) {
+          Row() {
+            Text('在线音质')
+              .fontSize(14)
+              .fontColor(TEXT_MAIN)
+            Blank()
+            Text(settings.onlineQualityLabel())
+              .fontSize(11)
+              .fontColor(settings.accent())
+          }
+          .width('100%')
+
+          MochiSegmented({
+            items: ['标准', '高', '无损', 'Hi-Res'],
+            index: Math.max(0, Math.min(3, this.st.onlineQuality)),
+            onSelect: (i: number) => {
+              settings.setOnlineQuality(i);
+            }
+          })
+          .width('100%')
+
+          Text('非会员选择无损会自动降档到 320k')
+            .fontSize(9)
+            .fontColor(TEXT_SUB)
+            .width('100%')
         }
         .width('100%')
-
-        MochiSegmented({
-          items: ['标准', '高', '无损', 'Hi-Res'],
-          index: Math.max(0, Math.min(3, this.st.onlineQuality)),
-          onSelect: (i: number) => {
-            settings.setOnlineQuality(i);
-          }
-        })
-        .width('100%')
-
-        Text('非会员选择无损会自动降档到 320k')
-          .fontSize(9)
-          .fontColor(TEXT_SUB)
-          .width('100%')
+        .padding({ top: 12, bottom: 12, left: 14, right: 14 })
       }
-      .width('100%')
-      .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
     }
     .width('100%')
     .height('100%')
@@ -1740,22 +1720,19 @@ struct Index {
   settingsAboutPage() {
     Column({ space: 2 }) {
       this.settingsSectionIntro('关于', 'MEMI 輕音 · 本地优先的音乐播放器')
-      Column() {
-        this.settingsInfoRow('版本', `${this.appVer} · 鸿蒙原生`)
-        this.settingsDividerPlain()
-        this.settingsInfoRow('曲库', `${this.lib.songs.length} 首 · ${this.totalDurationText()}`)
-        this.settingsDividerPlain()
-        this.settingsInfoRow('歌单 / 收藏', `${this.playlistsState.lists.length} 个 / ${this.favoriteSongs.length} 首`)
-        this.settingsDividerPlain()
-        this.settingsInfoRow('下载', `${this.dl.doneSongs.length} 首 · ${formatBytes(this.dl.totalBytes)}`)
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          this.settingsInfoRow('版本', `${this.appVer} · 鸿蒙原生`)
+          this.settingsDividerPlain()
+          this.settingsInfoRow('曲库', `${this.lib.songs.length} 首 · ${this.totalDurationText()}`)
+          this.settingsDividerPlain()
+          this.settingsInfoRow('歌单 / 收藏', `${this.playlistsState.lists.length} 个 / ${this.favoriteSongs.length} 首`)
+          this.settingsDividerPlain()
+          this.settingsInfoRow('下载', `${this.dl.doneSongs.length} 首 · ${formatBytes(this.dl.totalBytes)}`)
+        }
+        .width('100%')
+        .padding({ left: 14, right: 14, top: 6, bottom: 6 })
       }
-      .width('100%')
-      .padding({ left: 14, right: 14, top: 6, bottom: 6 })
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       MochiSurface({ radius: 20 }) {
         Column() {
@@ -1797,23 +1774,20 @@ struct Index {
       }
 
       this.settingsSectionIntro('操作', '缓存可以随时清，歌曲和歌词不会动')
-      Column() {
-        this.settingsActionRow('重新统计', this.storageState.scanning ? '正在统计…' : '点一下刷新上面的数字',
-          false, () => {
-            this.measureStorage();
-          })
-        this.settingsDividerPlain()
-        this.settingsActionRow('清理缓存', `当前 ${formatBytes(this.storageState.cache)}，只删 cacheDir`,
-          false, () => {
-            this.confirmClearCache();
-          })
+      MochiSurface({ radius: 20 }) {
+        Column() {
+          this.settingsActionRow('重新统计', this.storageState.scanning ? '正在统计…' : '点一下刷新上面的数字',
+            false, () => {
+              this.measureStorage();
+            })
+          this.settingsDividerPlain()
+          this.settingsActionRow('清理缓存', `当前 ${formatBytes(this.storageState.cache)}，只删 cacheDir`,
+            false, () => {
+              this.confirmClearCache();
+            })
+        }
+        .width('100%')
       }
-      .width('100%')
-      .borderRadius(20)
-      .backgroundColor('#0DFFFFFF')
-      .borderWidth(0.5)
-      .borderColor('#18FFFFFF')
-      .clip(true)
 
       Text('缓存里主要是封面解码的中间文件，清掉后下次加载会重新生成，不影响播放。')
         .fontSize(9)
@@ -2026,80 +2000,79 @@ struct Index {
   privacyDialog() {
     // 遮罩直接用 Stack 自身底色，避免多一层空容器把卡片的点击吃掉
     Stack() {
-      Column({ space: 12 }) {
-        Text('隐私与数据')
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(TEXT_MAIN)
-          .width('100%')
-
-        Text(PRIVACY_INTRO)
-          .fontSize(12)
-          .lineHeight(20)
-          .fontColor(TEXT_SUB)
-          .width('100%')
-
-        Column({ space: 3 }) {
-          Text('· 只读取你选择的音乐文件，不上传任何音频')
-            .fontSize(11)
-            .fontColor('#B3A49C')
+      MochiSurface({ radius: 24, fillColor: '#2E2521', strokeColor: '#1FFFFFFF', widthPercent: 86 }) {
+        Column({ space: 12 }) {
+          Text('隐私与数据')
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(TEXT_MAIN)
             .width('100%')
-          Text('· 不含统计、广告、崩溃上报 SDK')
-            .fontSize(11)
-            .fontColor('#B3A49C')
-            .width('100%')
-          Text('· 网易云登录凭据只存在本机')
-            .fontSize(11)
-            .fontColor('#B3A49C')
-            .width('100%')
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
 
-        Text('查看完整隐私政策 ›')
-          .fontSize(12)
-          .fontColor(settings.accent())
-          .padding({ top: 2, bottom: 2 })
-          .onClick(() => {
-            this.showPrivacyText = true;
-          })
-
-        Row({ space: 10 }) {
-          Text('暂不')
-            .fontSize(14)
+          Text(PRIVACY_INTRO)
+            .fontSize(12)
+            .lineHeight(20)
             .fontColor(TEXT_SUB)
-            .height(44)
-            .layoutWeight(1)
-            .textAlign(TextAlign.Center)
-            .borderRadius(22)
-            .backgroundColor('#14FFFFFF')
+            .width('100%')
+
+          Column({ space: 3 }) {
+            Text('· 只读取你选择的音乐文件，不上传任何音频')
+              .fontSize(11)
+              .fontColor('#B3A49C')
+              .width('100%')
+            Text('· 不含统计、广告、崩溃上报 SDK')
+              .fontSize(11)
+              .fontColor('#B3A49C')
+              .width('100%')
+            Text('· 网易云登录凭据只存在本机')
+              .fontSize(11)
+              .fontColor('#B3A49C')
+              .width('100%')
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+
+          Text('查看完整隐私政策 ›')
+            .fontSize(12)
+            .fontColor(settings.accent())
+            .padding({ top: 2, bottom: 2 })
             .onClick(() => {
-              this.onPrivacyReject();
+              this.showPrivacyText = true;
             })
 
-          Text('同意并继续')
-            .fontSize(14)
-            .fontColor('#241C18')
-            .height(44)
-            .layoutWeight(1)
-            .textAlign(TextAlign.Center)
-            .borderRadius(22)
-            .backgroundColor(settings.accent())
-            .onClick(() => {
-              this.onPrivacyAgree();
-            })
+          Row({ space: 10 }) {
+            Text('暂不')
+              .fontSize(14)
+              .fontColor(TEXT_SUB)
+              .height(44)
+              .layoutWeight(1)
+              .textAlign(TextAlign.Center)
+              .borderRadius(22)
+              .backgroundColor('#14FFFFFF')
+              .onClick(() => {
+                this.onPrivacyReject();
+              })
+
+            Text('同意并继续')
+              .fontSize(14)
+              .fontColor('#241C18')
+              .height(44)
+              .layoutWeight(1)
+              .textAlign(TextAlign.Center)
+              .borderRadius(22)
+              .backgroundColor(settings.accent())
+              .onClick(() => {
+                this.onPrivacyAgree();
+              })
+          }
+          .width('100%')
+          .margin({ top: 4 })
         }
         .width('100%')
-        .margin({ top: 4 })
+        .constraintSize({ maxWidth: 420 })
+        .padding({ top: 22, bottom: 18, left: 20, right: 20 })
+        .backgroundColor('#2E2521')
+        .shadow({ radius: 30, color: '#66000000', offsetX: 0, offsetY: 12 })
       }
-      .width('86%')
-      .constraintSize({ maxWidth: 420 })
-      .padding({ top: 22, bottom: 18, left: 20, right: 20 })
-      .borderRadius(24)
-      .backgroundColor('#2E2521')
-      .borderWidth(1)
-      .borderColor('#1FFFFFFF')
-      .shadow({ radius: 30, color: '#66000000', offsetX: 0, offsetY: 12 })
     }
     .width('100%')
     .height('100%')
@@ -2443,53 +2416,52 @@ struct Index {
   @Builder
   createPlaylistDialog() {
     Column() {
-      Column({ space: 14 }) {
-        Text('新建歌单')
-          .fontSize(15)
-          .fontColor(TEXT_MAIN)
-        TextInput({ placeholder: '歌单名称' })
-          .placeholderColor(TEXT_SUB)
-          .placeholderFont({ size: 12 })
-          .fontColor(TEXT_MAIN)
-          .fontSize(13)
-          .height(44)
-          .backgroundColor('#1FFFFFFF')
-          .borderRadius(12)
-          .caretColor(settings.accent())
-          .onChange((value: string) => {
-            this.newName = value;
-          })
-        Row({ space: 10 }) {
-          Button('取消')
+      MochiSurface({ radius: 22, fillColor: '#2E2521', strokeColor: '#1FFFFFFF', widthPercent: 80 }) {
+        Column({ space: 14 }) {
+          Text('新建歌单')
+            .fontSize(15)
+            .fontColor(TEXT_MAIN)
+          TextInput({ placeholder: '歌单名称' })
+            .placeholderColor(TEXT_SUB)
+            .placeholderFont({ size: 12 })
+            .fontColor(TEXT_MAIN)
             .fontSize(13)
-            .fontColor(TEXT_SUB)
+            .height(44)
             .backgroundColor('#1FFFFFFF')
-            .height(42)
-            .layoutWeight(1)
-            .borderRadius(21)
-            .onClick(() => {
-              this.showCreate = false;
+            .borderRadius(12)
+            .caretColor(settings.accent())
+            .onChange((value: string) => {
+              this.newName = value;
             })
-          Button('创建')
-            .fontSize(13)
-            .fontColor('#1E1A18')
-            .backgroundColor(settings.accent())
-            .height(42)
-            .layoutWeight(1)
-            .borderRadius(21)
-            .onClick(() => {
-              this.confirmCreatePlaylist();
-            })
+          Row({ space: 10 }) {
+            Button('取消')
+              .fontSize(13)
+              .fontColor(TEXT_SUB)
+              .backgroundColor('#1FFFFFFF')
+              .height(42)
+              .layoutWeight(1)
+              .borderRadius(21)
+              .onClick(() => {
+                this.showCreate = false;
+              })
+            Button('创建')
+              .fontSize(13)
+              .fontColor('#1E1A18')
+              .backgroundColor(settings.accent())
+              .height(42)
+              .layoutWeight(1)
+              .borderRadius(21)
+              .onClick(() => {
+                this.confirmCreatePlaylist();
+              })
+          }
+          .width('100%')
         }
         .width('100%')
+        .padding(20)
+        .backgroundColor('#2E2521')
+        .transition(this.dialogTransition())
       }
-      .width('80%')
-      .padding(20)
-      .borderRadius(22)
-      .backgroundColor('#2E2521')
-      .borderWidth(1)
-      .borderColor('#1FFFFFFF')
-      .transition(this.dialogTransition())
     }
     .width('100%')
     .height('100%')
@@ -2501,71 +2473,70 @@ struct Index {
   @Builder
   pickerOverlay() {
     Column() {
-      Column({ space: 10 }) {
-        Row() {
-          Text('加入歌单')
-            .fontSize(15)
-            .fontColor(TEXT_MAIN)
-          Blank()
-          Text('✕')
-            .fontSize(15)
-            .fontColor(TEXT_SUB)
-            .width(36)
-            .height(36)
+      MochiSurface({ radius: 22, fillColor: '#2E2521', strokeColor: '#1FFFFFFF', widthPercent: 84 }) {
+        Column({ space: 10 }) {
+          Row() {
+            Text('加入歌单')
+              .fontSize(15)
+              .fontColor(TEXT_MAIN)
+            Blank()
+            Text('✕')
+              .fontSize(15)
+              .fontColor(TEXT_SUB)
+              .width(36)
+              .height(36)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.pickerPath = '';
+                this.pickerSong = null;
+              })
+          }
+          .width('100%')
+
+          List({ space: 2 }) {
+            ForEach(this.playlistsState.lists, (list: Playlist) => {
+              ListItem() {
+                Row({ space: 10 }) {
+                  Text(list.name)
+                    .fontSize(13)
+                    .fontColor(TEXT_MAIN)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .layoutWeight(1)
+                  Text(`${list.paths.length} 首`)
+                    .fontSize(10)
+                    .fontColor(TEXT_SUB)
+                }
+                .width('100%')
+                .padding({ top: 12, bottom: 12, left: 4, right: 4 })
+                .onClick(() => {
+                  this.addToPlaylist(list.id);
+                })
+              }
+            }, (list: Playlist) => `${list.id}_${this.playlistsState.version}`)
+          }
+          .width('100%')
+          .height(220)
+          .scrollBar(BarState.Off)
+
+          Text('＋ 新建歌单并加入')
+            .fontSize(12)
+            .fontColor(settings.accent())
+            .width('100%')
             .textAlign(TextAlign.Center)
+            .padding({ top: 10, bottom: 10 })
+            .borderRadius(12)
+            .backgroundColor(settings.accentSoft(0.10))
             .onClick(() => {
-              this.pickerPath = '';
-              this.pickerSong = null;
+              this.newName = '';
+              this.showCreate = true;
             })
         }
         .width('100%')
-
-        List({ space: 2 }) {
-          ForEach(this.playlistsState.lists, (list: Playlist) => {
-            ListItem() {
-              Row({ space: 10 }) {
-                Text(list.name)
-                  .fontSize(13)
-                  .fontColor(TEXT_MAIN)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .layoutWeight(1)
-                Text(`${list.paths.length} 首`)
-                  .fontSize(10)
-                  .fontColor(TEXT_SUB)
-              }
-              .width('100%')
-              .padding({ top: 12, bottom: 12, left: 4, right: 4 })
-              .onClick(() => {
-                this.addToPlaylist(list.id);
-              })
-            }
-          }, (list: Playlist) => `${list.id}_${this.playlistsState.version}`)
-        }
-        .width('100%')
-        .height(220)
-        .scrollBar(BarState.Off)
-
-        Text('＋ 新建歌单并加入')
-          .fontSize(12)
-          .fontColor(settings.accent())
-          .width('100%')
-          .textAlign(TextAlign.Center)
-          .padding({ top: 10, bottom: 10 })
-          .borderRadius(12)
-          .backgroundColor(settings.accentSoft(0.10))
-          .onClick(() => {
-            this.newName = '';
-            this.showCreate = true;
-          })
+        .padding(18)
+        .backgroundColor('#2E2521')
+        .transition(this.dialogTransition())
       }
-      .width('84%')
-      .padding(18)
-      .borderRadius(22)
-      .backgroundColor('#2E2521')
-      .borderWidth(1)
-      .borderColor('#1FFFFFFF')
-      .transition(this.dialogTransition())
     }
     .width('100%')
     .height('100%')
@@ -2784,61 +2755,61 @@ struct Index {
         }
         .width('100%')
 
-        Column({ space: 10 }) {
-          Text('最近 7 天')
-            .fontSize(11)
-            .fontColor(TEXT_SUB)
-            .width('100%')
-          Row({ space: 8 }) {
-            ForEach(this.statsState.days, (day: StatsDayItem) => {
-              Column({ space: 6 }) {
-                Text(`${day.count}`)
-                  .fontSize(9)
-                  .fontColor(day.count > 0 ? TEXT_MAIN : TEXT_SUB)
-                Stack({ alignContent: Alignment.Bottom }) {
-                  Column().width('100%').height(86).borderRadius(6).backgroundColor('#08FFFFFF')
-                  Column().width('100%').height(this.barHeight(day.count)).borderRadius(6)
-                    .backgroundColor(day.isToday ? settings.accent() : settings.accentSoft(0.45))
-                }
-                .width('100%')
-                .height(86)
-                Text(day.label).fontSize(8).fontColor(TEXT_SUB)
-              }
-              .layoutWeight(1)
-            }, (day: StatsDayItem) => day.label)
-          }
-          .width('100%')
-        }
-        .width('100%')
-        .padding(14)
-        .borderRadius(16)
-        .backgroundColor('#0DFFFFFF')
-
-        Column({ space: 2 }) {
-          Row() {
-            Text('最常听')
+        MochiSurface({ radius: 16 }) {
+          Column({ space: 10 }) {
+            Text('最近 7 天')
               .fontSize(11)
               .fontColor(TEXT_SUB)
-            Blank()
-            Text('次数')
-              .fontSize(9)
-              .fontColor(TEXT_SUB)
+              .width('100%')
+            Row({ space: 8 }) {
+              ForEach(this.statsState.days, (day: StatsDayItem) => {
+                Column({ space: 6 }) {
+                  Text(`${day.count}`)
+                    .fontSize(9)
+                    .fontColor(day.count > 0 ? TEXT_MAIN : TEXT_SUB)
+                  Stack({ alignContent: Alignment.Bottom }) {
+                    Column().width('100%').height(86).borderRadius(6).backgroundColor('#08FFFFFF')
+                    Column().width('100%').height(this.barHeight(day.count)).borderRadius(6)
+                      .backgroundColor(day.isToday ? settings.accent() : settings.accentSoft(0.45))
+                  }
+                  .width('100%')
+                  .height(86)
+                  Text(day.label).fontSize(8).fontColor(TEXT_SUB)
+                }
+                .layoutWeight(1)
+              }, (day: StatsDayItem) => day.label)
+            }
+            .width('100%')
           }
           .width('100%')
-          .padding({ left: 14, right: 14, top: 12, bottom: 4 })
-
-          this.statRow(0)
-          this.statRow(1)
-          this.statRow(2)
-          this.statRow(3)
-          this.statRow(4)
-          this.statRow(5)
-          this.statRow(6)
-          this.statRow(7)
+          .padding(14)
         }
-        .width('100%')
-        .borderRadius(16)
-        .backgroundColor('#0DFFFFFF')
+
+        MochiSurface({ radius: 16 }) {
+          Column({ space: 2 }) {
+            Row() {
+              Text('最常听')
+                .fontSize(11)
+                .fontColor(TEXT_SUB)
+              Blank()
+              Text('次数')
+                .fontSize(9)
+                .fontColor(TEXT_SUB)
+            }
+            .width('100%')
+            .padding({ left: 14, right: 14, top: 12, bottom: 4 })
+
+            this.statRow(0)
+            this.statRow(1)
+            this.statRow(2)
+            this.statRow(3)
+            this.statRow(4)
+            this.statRow(5)
+            this.statRow(6)
+            this.statRow(7)
+          }
+          .width('100%')
+        }
 
         Text('收听时长为「次数 × 曲目时长」的估算值，快进和切歌会让它比真实值偏长')
           .fontSize(9)
@@ -3581,35 +3552,35 @@ struct Index {
   @Builder
   downloadView() {
     Column({ space: 10 }) {
-      Row({ space: 10 }) {
-        Column({ space: 3 }) {
-          Text(`已下载 ${this.dl.doneSongs.length} 首`)
-            .fontSize(14)
-            .fontColor(TEXT_MAIN)
-          Text(this.downloadSummary())
-            .fontSize(10)
-            .fontColor(TEXT_SUB)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-        }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
+      MochiSurface({ radius: 16 }) {
+        Row({ space: 10 }) {
+          Column({ space: 3 }) {
+            Text(`已下载 ${this.dl.doneSongs.length} 首`)
+              .fontSize(14)
+              .fontColor(TEXT_MAIN)
+            Text(this.downloadSummary())
+              .fontSize(10)
+              .fontColor(TEXT_SUB)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
 
-        if (this.dl.activeCount > 0) {
-          this.downloadChip('全部暂停', false, () => {
-            downloader.pauseAll();
-          })
-        } else if (this.downloadUnfinished() > 0) {
-          this.downloadChip('全部继续', false, () => {
-            downloader.resumeAll();
-          })
+          if (this.dl.activeCount > 0) {
+            this.downloadChip('全部暂停', false, () => {
+              downloader.pauseAll();
+            })
+          } else if (this.downloadUnfinished() > 0) {
+            this.downloadChip('全部继续', false, () => {
+              downloader.resumeAll();
+            })
+          }
         }
+        .width('100%')
+        .padding({ top: 10, bottom: 10, left: 14, right: 14 })
       }
-      .width('100%')
-      .padding({ top: 10, bottom: 10, left: 14, right: 14 })
-      .borderRadius(16)
-      .backgroundColor('#0DFFFFFF')
 
       if (this.dl.message.length > 0) {
         Text(this.dl.message)
@@ -3977,25 +3948,25 @@ struct Index {
             .padding({ top: 4, bottom: 4 })
 
             if (this.artistSt.brief.length > 0) {
-              Column({ space: 4 }) {
-                Text(this.artistSt.brief)
-                  .fontSize(10)
-                  .fontColor(TEXT_SUB)
-                  .lineHeight(16)
-                  .maxLines(this.briefOpen ? 30 : 3)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .width('100%')
-                Text(this.briefOpen ? '收起' : '展开')
-                  .fontSize(9)
-                  .fontColor(settings.accent())
-                  .onClick(() => {
-                    this.briefOpen = !this.briefOpen;
-                  })
+              MochiSurface({ radius: 14 }) {
+                Column({ space: 4 }) {
+                  Text(this.artistSt.brief)
+                    .fontSize(10)
+                    .fontColor(TEXT_SUB)
+                    .lineHeight(16)
+                    .maxLines(this.briefOpen ? 30 : 3)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .width('100%')
+                  Text(this.briefOpen ? '收起' : '展开')
+                    .fontSize(9)
+                    .fontColor(settings.accent())
+                    .onClick(() => {
+                      this.briefOpen = !this.briefOpen;
+                    })
+                }
+                .width('100%')
+                .padding(12)
               }
-              .width('100%')
-              .padding(12)
-              .borderRadius(14)
-              .backgroundColor('#0DFFFFFF')
             }
 
             Row({ space: 6 }) {
@@ -4648,48 +4619,48 @@ struct Index {
         Column({ space: 14 }) {
           if (this.auth.loggedIn) {
             // 已登录
-            Column({ space: 12 }) {
-              if (this.auth.avatarUrl.length > 0) {
-                Image(this.auth.avatarUrl)
-                  .width(72)
-                  .height(72)
-                  .borderRadius(36)
-                  .objectFit(ImageFit.Cover)
-                  .draggable(false)
-              } else {
-                Column()
-                  .width(72)
-                  .height(72)
-                  .borderRadius(36)
-                  .backgroundColor('#1FFFFFFF')
-              }
-              Text(this.auth.nickname)
-                .fontSize(16)
-                .fontColor(TEXT_MAIN)
-              Text(this.auth.vipLabel())
-                .fontSize(11)
-                .fontColor(settings.accent())
-              Text(`UID ${this.auth.userId}`)
-                .fontSize(10)
-                .fontColor(TEXT_SUB)
+            MochiSurface({ radius: 20 }) {
+              Column({ space: 12 }) {
+                if (this.auth.avatarUrl.length > 0) {
+                  Image(this.auth.avatarUrl)
+                    .width(72)
+                    .height(72)
+                    .borderRadius(36)
+                    .objectFit(ImageFit.Cover)
+                    .draggable(false)
+                } else {
+                  Column()
+                    .width(72)
+                    .height(72)
+                    .borderRadius(36)
+                    .backgroundColor('#1FFFFFFF')
+                }
+                Text(this.auth.nickname)
+                  .fontSize(16)
+                  .fontColor(TEXT_MAIN)
+                Text(this.auth.vipLabel())
+                  .fontSize(11)
+                  .fontColor(settings.accent())
+                Text(`UID ${this.auth.userId}`)
+                  .fontSize(10)
+                  .fontColor(TEXT_SUB)
 
-              Text('退出登录')
-                .fontSize(12)
-                .fontColor('#FF6B6B')
-                .height(36)
-                .padding({ left: 22, right: 22 })
-                .borderRadius(18)
-                .textAlign(TextAlign.Center)
-                .backgroundColor('#1AFF6B6B')
-                .margin({ top: 6 })
-                .onClick(() => {
-                  this.confirmLogout();
-                })
+                Text('退出登录')
+                  .fontSize(12)
+                  .fontColor('#FF6B6B')
+                  .height(36)
+                  .padding({ left: 22, right: 22 })
+                  .borderRadius(18)
+                  .textAlign(TextAlign.Center)
+                  .backgroundColor('#1AFF6B6B')
+                  .margin({ top: 6 })
+                  .onClick(() => {
+                    this.confirmLogout();
+                  })
+              }
+              .width('100%')
+              .padding({ top: 30, bottom: 30 })
             }
-            .width('100%')
-            .padding({ top: 30, bottom: 30 })
-            .borderRadius(20)
-            .backgroundColor('#0DFFFFFF')
           } else {
             // 未登录：两种方式
             Row({ space: 6 }) {
@@ -4764,139 +4735,139 @@ struct Index {
 
   @Builder
   qrPanel() {
-    Column({ space: 14 }) {
-      if (this.auth.qrPhase === QrPhase.LOADING) {
-        Column({ space: 10 }) {
-          LoadingProgress()
-            .width(32)
-            .height(32)
-            .color(settings.accent())
-          Text(this.fpReady ? '正在申请二维码…' : '正在准备登录环境…')
-            .fontSize(11)
-            .fontColor(TEXT_SUB)
-        }
-        .width(220)
-        .height(220)
-        .justifyContent(FlexAlign.Center)
-      } else if (this.auth.qrPhase === QrPhase.EXPIRED || this.auth.qrPhase === QrPhase.ERROR) {
-        Column({ space: 12 }) {
-          Text(this.auth.qrMessage.length > 0 ? this.auth.qrMessage : '二维码不可用')
-            .fontSize(11)
-            .fontColor(TEXT_SUB)
-            .textAlign(TextAlign.Center)
-          Text('刷新二维码')
-            .fontSize(11)
-            .fontColor('#1E1A18')
-            .height(32)
-            .padding({ left: 18, right: 18 })
-            .borderRadius(16)
-            .textAlign(TextAlign.Center)
-            .backgroundColor(settings.accent())
-            .onClick(() => {
-              neteaseAuth.refreshQr();
-            })
-        }
-        .width(220)
-        .height(220)
-        .justifyContent(FlexAlign.Center)
-      } else if (this.auth.qrKey.length > 0) {
-        Stack() {
+    MochiSurface({ radius: 20 }) {
+      Column({ space: 14 }) {
+        if (this.auth.qrPhase === QrPhase.LOADING) {
+          Column({ space: 10 }) {
+            LoadingProgress()
+              .width(32)
+              .height(32)
+              .color(settings.accent())
+            Text(this.fpReady ? '正在申请二维码…' : '正在准备登录环境…')
+              .fontSize(11)
+              .fontColor(TEXT_SUB)
+          }
+          .width(220)
+          .height(220)
+          .justifyContent(FlexAlign.Center)
+        } else if (this.auth.qrPhase === QrPhase.EXPIRED || this.auth.qrPhase === QrPhase.ERROR) {
+          Column({ space: 12 }) {
+            Text(this.auth.qrMessage.length > 0 ? this.auth.qrMessage : '二维码不可用')
+              .fontSize(11)
+              .fontColor(TEXT_SUB)
+              .textAlign(TextAlign.Center)
+            Text('刷新二维码')
+              .fontSize(11)
+              .fontColor('#1E1A18')
+              .height(32)
+              .padding({ left: 18, right: 18 })
+              .borderRadius(16)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(settings.accent())
+              .onClick(() => {
+                neteaseAuth.refreshQr();
+              })
+          }
+          .width(220)
+          .height(220)
+          .justifyContent(FlexAlign.Center)
+        } else if (this.auth.qrKey.length > 0) {
+          Stack() {
+            Column()
+              .width(220)
+              .height(220)
+              .borderRadius(16)
+              .backgroundColor('#FFFFFF')
+            QRCode(this.qrContentSafe())
+              .width(196)
+              .height(196)
+              .color('#1A1513')
+              .backgroundColor('#FFFFFF')
+          }
+          .width(220)
+          .height(220)
+
+          if (this.auth.qrPhase === QrPhase.SCANNED) {
+            Text('已扫码，请在手机上确认')
+              .fontSize(12)
+              .fontColor(settings.accent())
+          } else {
+            Text('用网易云音乐 App 扫描二维码')
+              .fontSize(12)
+              .fontColor(TEXT_MAIN)
+          }
+        } else {
           Column()
             .width(220)
             .height(220)
-            .borderRadius(16)
-            .backgroundColor('#FFFFFF')
-          QRCode(this.qrContentSafe())
-            .width(196)
-            .height(196)
-            .color('#1A1513')
-            .backgroundColor('#FFFFFF')
         }
-        .width(220)
-        .height(220)
 
-        if (this.auth.qrPhase === QrPhase.SCANNED) {
-          Text('已扫码，请在手机上确认')
-            .fontSize(12)
-            .fontColor(settings.accent())
-        } else {
-          Text('用网易云音乐 App 扫描二维码')
-            .fontSize(12)
-            .fontColor(TEXT_MAIN)
-        }
-      } else {
-        Column()
-          .width(220)
-          .height(220)
+        Text('扫码没反应？可切到「Cookie 导入」，从浏览器复制凭据')
+          .fontSize(10)
+          .fontColor(TEXT_SUB)
+          .textAlign(TextAlign.Center)
       }
-
-      Text('扫码没反应？可切到「Cookie 导入」，从浏览器复制凭据')
-        .fontSize(10)
-        .fontColor(TEXT_SUB)
-        .textAlign(TextAlign.Center)
+      .width('100%')
+      .padding({ top: 24, bottom: 24 })
     }
-    .width('100%')
-    .padding({ top: 24, bottom: 24 })
-    .borderRadius(20)
-    .backgroundColor('#0DFFFFFF')
   }
 
   @Builder
   cookiePanel() {
-    Column({ space: 12 }) {
-      Text('从浏览器或抓包工具里复制 music.163.com 的 Cookie')
-        .fontSize(11)
-        .fontColor(TEXT_SUB)
-        .width('100%')
-      TextArea({ text: this.auth.cookieDraft, placeholder: 'MUSIC_U=xxxx; __csrf=yyyy' })
-        .placeholderColor(TEXT_SUB)
-        .fontSize(11)
-        .fontColor(TEXT_MAIN)
-        .height(120)
-        .width('100%')
-        .borderRadius(12)
-        .backgroundColor('#14FFFFFF')
-        .caretColor(settings.accent())
-        .onChange((value: string) => {
-          this.auth.cookieDraft = value;
-        })
-
-      Row({ space: 8 }) {
-        Text('读剪贴板')
+    MochiSurface({ radius: 20 }) {
+      Column({ space: 12 }) {
+        Text('从浏览器或抓包工具里复制 music.163.com 的 Cookie')
           .fontSize(11)
           .fontColor(TEXT_SUB)
-          .height(34)
-          .layoutWeight(1)
-          .borderRadius(17)
-          .textAlign(TextAlign.Center)
-          .backgroundColor('#14FFFFFF')
-          .onClick(() => {
-            this.pasteCookie();
-          })
-        Text('登录')
+          .width('100%')
+        TextArea({ text: this.auth.cookieDraft, placeholder: 'MUSIC_U=xxxx; __csrf=yyyy' })
+          .placeholderColor(TEXT_SUB)
           .fontSize(11)
-          .fontColor('#1E1A18')
-          .height(34)
-          .layoutWeight(1)
-          .borderRadius(17)
-          .textAlign(TextAlign.Center)
-          .backgroundColor(settings.accent())
-          .enabled(!this.auth.busy)
-          .onClick(() => {
-            this.doCookieLogin();
+          .fontColor(TEXT_MAIN)
+          .height(120)
+          .width('100%')
+          .borderRadius(12)
+          .backgroundColor('#14FFFFFF')
+          .caretColor(settings.accent())
+          .onChange((value: string) => {
+            this.auth.cookieDraft = value;
           })
+
+        Row({ space: 8 }) {
+          Text('读剪贴板')
+            .fontSize(11)
+            .fontColor(TEXT_SUB)
+            .height(34)
+            .layoutWeight(1)
+            .borderRadius(17)
+            .textAlign(TextAlign.Center)
+            .backgroundColor('#14FFFFFF')
+            .onClick(() => {
+              this.pasteCookie();
+            })
+          Text('登录')
+            .fontSize(11)
+            .fontColor('#1E1A18')
+            .height(34)
+            .layoutWeight(1)
+            .borderRadius(17)
+            .textAlign(TextAlign.Center)
+            .backgroundColor(settings.accent())
+            .enabled(!this.auth.busy)
+            .onClick(() => {
+              this.doCookieLogin();
+            })
+        }
+        .width('100%')
+
+        Text('只填 MUSIC_U 的值也可以；导入后会立刻校验一次')
+          .fontSize(9)
+          .fontColor(TEXT_SUB)
+          .width('100%')
       }
       .width('100%')
-
-      Text('只填 MUSIC_U 的值也可以；导入后会立刻校验一次')
-        .fontSize(9)
-        .fontColor(TEXT_SUB)
-        .width('100%')
+      .padding(16)
     }
-    .width('100%')
-    .padding(16)
-    .borderRadius(20)
-    .backgroundColor('#0DFFFFFF')
   }
 
   private qrContentSafe(): string {
@@ -5226,22 +5197,26 @@ struct Index {
 
   @Builder
   metricCard(label: string, value: string) {
-    Column({ space: 6 }) {
-      Text(value)
-        .fontSize(20)
-        .fontColor(settings.accent())
-        .fontWeight(FontWeight.Medium)
+    // 小块要按 layoutWeight 分宽，MochiSurface 自身固定整宽，所以外面包一层 Row
+    Row() {
+      MochiSurface({ radius: 16 }) {
+        Column({ space: 6 }) {
+          Text(value)
+            .fontSize(20)
+            .fontColor(settings.accent())
+            .fontWeight(FontWeight.Medium)
+            .width('100%')
+          Text(label)
+            .fontSize(10)
+            .fontColor(TEXT_SUB)
+            .width('100%')
+        }
         .width('100%')
-      Text(label)
-        .fontSize(10)
-        .fontColor(TEXT_SUB)
-        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .padding(14)
+      }
     }
     .layoutWeight(1)
-    .alignItems(HorizontalAlign.Start)
-    .padding(14)
-    .borderRadius(16)
-    .backgroundColor('#0DFFFFFF')
   }
 
   @Builder
@@ -5683,7 +5658,13 @@ struct Index {
   /** 迷你播放器：封面 + 曲名/歌手 + 播放暂停，点整条进播放页 */
   @Builder
   miniPlayer() {
-    Row({ space: 12 }) {
+    MochiSurface({
+      radius: 20,
+      fillColor: this.chromeBg(),
+      strokeColor: '#1FFFFFFF',
+      backdrop: this.st.chromeGlass / 100 * 30
+    }) {
+      Row({ space: 12 }) {
       Stack() {
         // 读一次 thumbs.version：缩略图是后台解出来的，解完要能刷新
         if (!this.player.currentPath.startsWith('netease://') && this.st.showThumbs
@@ -5760,14 +5741,10 @@ struct Index {
     .width('100%')
     .height(62)
     .padding({ left: 9, right: 9 })
-    .borderRadius(20)
-    .backgroundColor(this.chromeBg())
-    .backdropBlur(this.st.chromeGlass / 100 * 30)
-    .borderWidth(1)
-    .borderColor('#1FFFFFFF')
     .onClick(() => {
       this.openPlayer();
     })
+    }
   }
 
   /** 底部页签栏：mochi 的胶囊 + 整块滑动的选中底 */
