@@ -5770,6 +5770,21 @@ struct Index {
       .width('100%')
       .height(64)
       .padding({ left: 6, right: 6, top: 6, bottom: 6 })
+      .onTouch((e: TouchEvent) => {
+        // 按下滑动经过哪个页签就选中哪个，和 mochi 标签栏一致
+        if (e.touches.length === 0 || this.tabBarWidth <= 0) {
+          return;
+        }
+        if (e.type !== TouchType.Down && e.type !== TouchType.Move) {
+          return;
+        }
+        const seg = (this.tabBarWidth - 12) / 4;
+        const idx = Math.floor((e.touches[0].x - 6) / seg);
+        const hit = Math.max(0, Math.min(3, idx));
+        if (hit !== this.tab) {
+          this.jumpTab(hit);
+        }
+      })
     }
     .width('100%')
     .height(64)

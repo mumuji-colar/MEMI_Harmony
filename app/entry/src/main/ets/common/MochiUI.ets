@@ -63,6 +63,17 @@ export struct MochiSwitch {
   };
 
   @Local pressed: boolean = false;
+  /** 自身维护的显示状态：父级参数不会因为 @Builder 缓存而刷新，先本地乐观更新 */
+  @Local visual: boolean = false;
+
+  aboutToAppear(): void {
+    this.visual = this.isOn;
+  }
+
+  @Monitor('isOn')
+  onIsOnChanged(): void {
+    this.visual = this.isOn;
+  }
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
@@ -70,7 +81,7 @@ export struct MochiSwitch {
         .width(64)
         .height(28)
         .borderRadius(14)
-        .backgroundColor(this.isOn ? settings.accent() : TRACK_OFF)
+        .backgroundColor(this.visual ? settings.accent() : TRACK_OFF)
 
       Row()
         .width(38)
@@ -79,7 +90,7 @@ export struct MochiSwitch {
         .backgroundColor(THUMB)
         .shadow({ radius: 6, color: '#38000000', offsetX: 0, offsetY: 2 })
         .scale({ x: this.pressed ? 1.06 : 1, y: this.pressed ? 1.06 : 1 })
-        .translate({ x: this.isOn ? 22 : 2, y: 2 })
+        .translate({ x: this.visual ? 22 : 2, y: 2 })
         .animation({ curve: MochiSpring.follow(), duration: 360 })
     }
     .width(64)
@@ -91,7 +102,8 @@ export struct MochiSwitch {
         this.pressed = true;
       } else if (event.type === TouchType.Up) {
         this.pressed = false;
-        this.onToggle(!this.isOn);
+        this.visual = !this.visual;
+        this.onToggle(this.visual);
       } else if (event.type === TouchType.Cancel) {
         this.pressed = false;
       }
